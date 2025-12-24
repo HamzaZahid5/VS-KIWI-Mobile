@@ -9,20 +9,26 @@
       "resizeMode": "contain",
       "backgroundColor": "#FF6B35"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kiwi.app"
     },
     "android": {
+      "package": "com.kiwi.app",
+      "versionCode": 1,
+      "compileSdkVersion": 33,
+      "targetSdkVersion": 33,
+      "buildToolsVersion": "33.0.2",
       "adaptiveIcon": {
         "backgroundColor": "#FF6B35"
-      },
-      "package": "com.kiwi.app"
+      }
     },
-    "web": {}
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "6a722c73-7cc6-4251-8df6-d03a46b3c952"
+      }
+    }
   }
 }
-

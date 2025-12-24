@@ -11,7 +11,7 @@ import { colors } from '../theme';
 import { selectIsAuthenticated } from '../redux/authSlice';
 
 // Import screens
-import HomeScreen from '../screens/HomeScreen';
+import HomeScreen from '../screens/Home/HomeScreen';
 import BookingScreen from '../screens/BookingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -99,17 +99,7 @@ const AppNavigator = () => {
           name="Home"
           component={HomeScreen}
           options={{
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: colors.primary,
-            },
-            headerTintColor: colors.textWhite,
-            headerTitleStyle: {
-              fontWeight: '600',
-              fontSize: 18,
-            },
-            headerBackTitleVisible: false,
-            title: 'Kiwi Rentals',
+            headerShown: false, // Home screen has its own header matching web app
           }}
         />
         <Stack.Screen

@@ -1,0 +1,16 @@
+# EAS Build ignore file
+# Files and directories to exclude from EAS Build uploads
+
+node_modules/
+.git/
+.expo/
+.expo-shared/
+dist/
+build/
+*.log
+.DS_Store
+*.pem
+*.key
+.env.local
+.env.*.local
+
