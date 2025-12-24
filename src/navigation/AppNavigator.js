@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
@@ -34,19 +35,36 @@ const Stack = createStackNavigator();
 const AppNavigator = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const navigationRef = useRef(null);
+  const isInitialMount = useRef(true);
 
-  // Navigate to Login if not authenticated (after initial mount)
+  // Only navigate if authentication state changes (not on initial mount)
+  // Since initialRouteName is already "Login", we don't need to navigate on mount
   useEffect(() => {
-    // Small delay to ensure navigation is ready
-    const timer = setTimeout(() => {
-      if (!isAuthenticated && navigationRef.current?.isReady()) {
-        navigationRef.current.reset({
-          index: 0,
-          routes: [{ name: 'Login' }],
-        });
-      }
-    }, 100);
-    return () => clearTimeout(timer);
+    // Skip navigation on initial mount - let initialRouteName handle it
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
+    // Only navigate if auth state changes after initial mount
+    if (!navigationRef.current?.isReady()) return;
+    
+    const currentRoute = navigationRef.current.getCurrentRoute();
+    
+    // If not authenticated and not on Login screen, navigate to Login
+    if (!isAuthenticated && currentRoute?.name !== 'Login') {
+      navigationRef.current.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    }
+    // If authenticated and on Login screen, navigate to Home
+    else if (isAuthenticated && currentRoute?.name === 'Login') {
+      navigationRef.current.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
+    }
   }, [isAuthenticated]);
 
   return (
@@ -109,6 +127,8 @@ const AppNavigator = () => {
             headerShown: true,
             headerStyle: {
               backgroundColor: colors.primary,
+              elevation: 0,
+              shadowOpacity: 0,
             },
             headerTintColor: colors.textWhite,
             headerTitleStyle: {
@@ -126,6 +146,8 @@ const AppNavigator = () => {
             headerShown: true,
             headerStyle: {
               backgroundColor: colors.primary,
+              elevation: 0,
+              shadowOpacity: 0,
             },
             headerTintColor: colors.textWhite,
             headerTitleStyle: {
@@ -143,6 +165,8 @@ const AppNavigator = () => {
             headerShown: true,
             headerStyle: {
               backgroundColor: colors.primary,
+              elevation: 0,
+              shadowOpacity: 0,
             },
             headerTintColor: colors.textWhite,
             headerTitleStyle: {

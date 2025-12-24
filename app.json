@@ -6,8 +6,9 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#FF6B35"
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#00711e"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -16,12 +17,9 @@
     },
     "android": {
       "package": "com.kiwi.app",
-      "versionCode": 1,
-      "compileSdkVersion": 33,
-      "targetSdkVersion": 33,
-      "buildToolsVersion": "33.0.2",
       "adaptiveIcon": {
-        "backgroundColor": "#FF6B35"
+        "foregroundImage": "./assets/playstore.png",
+        "backgroundColor": "#00711e"
       }
     },
     "web": {},

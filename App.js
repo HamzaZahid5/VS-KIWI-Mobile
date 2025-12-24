@@ -4,45 +4,63 @@
  * Sets up Redux Provider and Navigation
  */
 
-import React from 'react';
-import { StatusBar } from 'react-native';
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { store, persistor } from './src/redux/store';
-import AppNavigator from './src/navigation/AppNavigator';
-import { colors } from './src/theme';
+import React, { useEffect, useState } from "react";
+import { StatusBar, View } from "react-native";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import * as SplashScreen from "expo-splash-screen";
+import { store, persistor } from "./src/redux/store";
+import AppNavigator from "./src/navigation/AppNavigator";
+import { colors } from "./src/theme";
 
-/**
- * Loading component shown while Redux state is being rehydrated
- */
-const LoadingScreen = () => (
-  <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color={colors.primary} />
-  </View>
-);
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 /**
  * Main App component
  * Wraps the app with Redux Provider and PersistGate for state persistence
  */
 export default function App() {
+  const [appIsReady, setAppIsReady] = useState(false);
+
+  useEffect(() => {
+    async function prepare() {
+      try {
+        // Wait exactly 3 seconds before hiding splash screen
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        // Hide the splash screen
+        await SplashScreen.hideAsync();
+
+        // Set app ready
+        setAppIsReady(true);
+      } catch (e) {
+        console.warn("App preparation error:", e);
+        setAppIsReady(true);
+      }
+    }
+
+    prepare();
+  }, []);
+
+  // Show nothing until app is ready (splash screen will be visible)
+  if (!appIsReady) {
+    return null;
+  }
+
+  // Render the app after splash screen is hidden
   return (
-    <Provider store={store}>
-      <PersistGate loading={<LoadingScreen />} persistor={persistor}>
-        <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
-        <AppNavigator />
-      </PersistGate>
-    </Provider>
+    <View style={{ flex: 1 }}>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <StatusBar
+            barStyle="light-content"
+            translucent={false}
+            backgroundColor={colors.primary}
+          />
+          <AppNavigator />
+        </PersistGate>
+      </Provider>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-});
-
