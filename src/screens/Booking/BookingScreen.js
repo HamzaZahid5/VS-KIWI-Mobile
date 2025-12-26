@@ -147,27 +147,9 @@ const BookingScreen = ({ navigation, route }) => {
             alignItems: "center",
           }}
         >
-          <ChevronLeft
-            size={26}
-            // color={step === "location" ? colors.textMuted : colors.primary}
-            color={colors.primary}
-          />
-          {/* <Text>Back</Text> */}
+          <ChevronLeft size={26} color={colors.primary} />
         </TouchableOpacity>
-        {/* <Button
-          title="Previous"
-          onPress={handleBack}
-          variant="outline"
-          style={styles.backButton}
-          size="sm"
-          disabled={step === "location"}
-          icon={
-            <ChevronLeft
-              size={16}
-              color={step === "location" ? colors.textMuted : colors.primary}
-            />
-          }
-        /> */}
+
         <View style={styles.header}>
           <View style={styles.headerTop}>
             {/* Step Indicators */}

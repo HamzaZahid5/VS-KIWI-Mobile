@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Dimensions,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Search, Navigation, MapPin, AlertCircle } from "lucide-react-native";
@@ -26,8 +27,10 @@ import Input from "../../components/Input";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import Skeleton from "../../components/Skeleton";
-// Location will be handled via a simple selection for now
-// import * as Location from 'expo-location';
+import GoogleAutocomplete from "../../components/GoogleAutocomplete";
+import { GOOGLE_MAPS_API_KEY } from "../../utils/constants";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const LocationStep = ({ beaches, isLoading }) => {
   const dispatch = useDispatch();
@@ -35,6 +38,7 @@ const LocationStep = ({ beaches, isLoading }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [locationError, setLocationError] = useState(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   const activeBeaches = beaches.filter((b) => b.isActive);
 
@@ -83,6 +87,42 @@ const LocationStep = ({ beaches, isLoading }) => {
         longitude: parseFloat(beach.longitude) || 0,
       })
     );
+    setSelectedPlace(beach);
+    setSearchQuery(beach.name);
+  };
+
+  const handlePlaceSelect = (place) => {
+    if (!place || !place.geometry) return;
+
+    const lat = place.geometry.location.lat;
+    const lng = place.geometry.location.lng;
+
+    // Try to find a matching beach based on location
+    const matchedBeach = beaches.find((beach) => {
+      const beachLat = parseFloat(beach.latitude);
+      const beachLng = parseFloat(beach.longitude);
+
+      // Check if the selected place is within 1km of the beach (approximate)
+      const distance = Math.sqrt(
+        Math.pow(lat - beachLat, 2) + Math.pow(lng - beachLng, 2)
+      );
+      // 1 degree ≈ 111km, so 0.009 ≈ 1km
+      return distance < 0.009;
+    });
+
+    if (matchedBeach) {
+      dispatch(setBeachId(matchedBeach.id));
+      dispatch(setLocation({ latitude: lat, longitude: lng }));
+      setSelectedPlace(matchedBeach);
+      setSearchQuery(matchedBeach.name);
+    } else {
+      // If no beach matches, just set the location
+      dispatch(setLocation({ latitude: lat, longitude: lng }));
+      setSearchQuery(place.name || place.formatted_address);
+      setLocationError(
+        "Selected location doesn't match any beach. Please select a beach from the list below."
+      );
+    }
   };
 
   const canProceed =
@@ -96,112 +136,131 @@ const LocationStep = ({ beaches, isLoading }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Select Your Beach</Text>
-        <Text style={styles.subtitle}>
-          Choose a beach on the map and mark your delivery spot
-        </Text>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <Input
-          placeholder="Search beaches..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          icon={Search}
-          containerStyle={styles.searchInput}
-        />
-        <TouchableOpacity
-          onPress={handleGetCurrentLocation}
-          disabled={isGettingLocation}
-          style={[
-            styles.locationButton,
-            isGettingLocation && styles.locationButtonDisabled,
-          ]}
-        >
-          <Navigation
-            size={20}
-            color={isGettingLocation ? colors.textMuted : colors.primary}
-            style={isGettingLocation && { transform: [{ rotate: "360deg" }] }}
-          />
-        </TouchableOpacity>
-      </View>
-
-      {locationError && (
-        <View style={styles.errorContainer}>
-          <AlertCircle size={16} color={colors.error} />
-          <Text style={styles.errorText}>{locationError}</Text>
+      <View style={styles.contentWrapper}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Select Your Beach</Text>
+          <Text style={styles.subtitle}>
+            Choose a beach on the map and mark your delivery spot
+          </Text>
         </View>
-      )}
 
-      <ScrollView style={styles.beachList} showsVerticalScrollIndicator={false}>
-        {filteredBeaches.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              No beaches found matching "{searchQuery}"
-            </Text>
+        <View style={styles.searchContainer}>
+          {GOOGLE_MAPS_API_KEY ? (
+            <GoogleAutocomplete
+              placeholder="Search beaches or locations..."
+              apiKey={GOOGLE_MAPS_API_KEY}
+              onPlaceSelect={handlePlaceSelect}
+              containerStyle={styles.searchInput}
+            />
+          ) : (
+            <Input
+              placeholder="Search beaches..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              icon={Search}
+              containerStyle={styles.searchInput}
+            />
+          )}
+          <TouchableOpacity
+            onPress={handleGetCurrentLocation}
+            disabled={isGettingLocation}
+            style={[
+              styles.locationButton,
+              isGettingLocation && styles.locationButtonDisabled,
+            ]}
+          >
+            <Navigation
+              size={20}
+              color={isGettingLocation ? colors.textMuted : colors.primary}
+              style={isGettingLocation && { transform: [{ rotate: "360deg" }] }}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {locationError && (
+          <View style={styles.errorContainer}>
+            <AlertCircle size={16} color={colors.error} />
+            <Text style={styles.errorText}>{locationError}</Text>
           </View>
-        ) : (
-          filteredBeaches.map((beach) => {
-            const isSelected = beach.id === bookingData.beachId;
-            return (
-              <TouchableOpacity
-                key={beach.id}
-                onPress={() => handleBeachSelect(beach)}
-                activeOpacity={0.7}
-              >
-                <Card
-                  style={[
-                    styles.beachCard,
-                    isSelected && styles.beachCardSelected,
-                  ]}
+        )}
+
+        <ScrollView
+          style={styles.beachList}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.beachListContent}
+        >
+          {filteredBeaches.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                No beaches found matching "{searchQuery}"
+              </Text>
+            </View>
+          ) : (
+            filteredBeaches.map((beach) => {
+              const isSelected = beach.id === bookingData.beachId;
+              return (
+                <TouchableOpacity
+                  key={beach.id}
+                  onPress={() => handleBeachSelect(beach)}
+                  activeOpacity={0.7}
                 >
-                  <View style={styles.beachCardContent}>
-                    <View style={styles.beachCardLeft}>
-                      <View
-                        style={[
-                          styles.beachIcon,
-                          isSelected && styles.beachIconSelected,
-                        ]}
-                      >
-                        <MapPin
-                          size={20}
-                          color={isSelected ? colors.textWhite : colors.primary}
-                        />
-                      </View>
-                      <View style={styles.beachInfo}>
-                        <Text
+                  <Card
+                    style={[
+                      styles.beachCard,
+                      isSelected && styles.beachCardSelected,
+                    ]}
+                  >
+                    <View style={styles.beachCardContent}>
+                      <View style={styles.beachCardLeft}>
+                        <View
                           style={[
-                            styles.beachName,
-                            isSelected && styles.beachNameSelected,
+                            styles.beachIcon,
+                            isSelected && styles.beachIconSelected,
                           ]}
                         >
-                          {beach.name}
-                        </Text>
-                        <Text style={styles.beachLocation}>
-                          {beach.city}, {beach.country}
-                        </Text>
+                          <MapPin
+                            size={20}
+                            color={
+                              isSelected ? colors.textWhite : colors.primary
+                            }
+                          />
+                        </View>
+                        <View style={styles.beachInfo}>
+                          <Text
+                            style={[
+                              styles.beachName,
+                              isSelected && styles.beachNameSelected,
+                            ]}
+                          >
+                            {beach.name}
+                          </Text>
+                          <Text style={styles.beachLocation}>
+                            {beach.city}, {beach.country}
+                          </Text>
+                        </View>
                       </View>
+                      {isSelected && (
+                        <View style={styles.selectedBadge}>
+                          <Text style={styles.selectedBadgeText}>Selected</Text>
+                        </View>
+                      )}
                     </View>
-                    {isSelected && (
-                      <View style={styles.selectedBadge}>
-                        <Text style={styles.selectedBadgeText}>Selected</Text>
-                      </View>
-                    )}
-                  </View>
-                </Card>
-              </TouchableOpacity>
-            );
-          })
-        )}
-      </ScrollView>
+                  </Card>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </ScrollView>
+      </View>
 
-      <Button
-        title="Continue"
-        onPress={() => dispatch(nextStep())}
-        disabled={!canProceed}
-        style={styles.continueButton}
-      />
+      <View style={styles.buttonContainer}>
+        <Button
+          title="Continue"
+          onPress={() => dispatch(nextStep())}
+          disabled={!canProceed}
+          style={styles.continueButton}
+        />
+      </View>
     </View>
   );
 };
@@ -220,6 +279,10 @@ function LocationStepSkeleton() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    justifyContent: 'space-between', // Push button to bottom
+  },
+  contentWrapper: {
     flex: 1,
   },
   header: {
@@ -271,7 +334,10 @@ const styles = StyleSheet.create({
   },
   beachList: {
     flex: 1,
-    marginBottom: spacing.md,
+  },
+  beachListContent: {
+    paddingBottom: spacing.md,
+    flexGrow: 1,
   },
   beachCard: {
     marginBottom: spacing.sm,
@@ -334,8 +400,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.textWhite,
   },
+  buttonContainer: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    ...shadows.lg,
+  },
   continueButton: {
-    marginTop: spacing.md,
+    width: "100%",
   },
   emptyContainer: {
     padding: spacing.xl,

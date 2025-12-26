@@ -60,6 +60,11 @@ export const OTP_ENDPOINTS = {
   verify: "/auth/verify-otp",
 };
 
+// Google Maps API Key - Set via environment variable or provide directly
+// For Expo: Use EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+// For production, use environment variable for security
+export const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ";
+
 // Beaches Endpoints - matching web app
 export const beachesEndpoints = {
   list: "/beaches",
