@@ -35,11 +35,7 @@ const Input = ({
       <View style={[styles.inputContainer, error && styles.inputContainerError]}>
         {Icon && (
           <View style={styles.iconContainer}>
-            {typeof Icon === 'function' ? (
-              Icon({ size: 16, color: colors.mutedForeground })
-            ) : (
-              Icon
-            )}
+            <Icon size={16} color={colors.mutedForeground} />
           </View>
         )}
         <TextInput
@@ -64,11 +60,7 @@ const Input = ({
             onPress={onRightIconPress}
             activeOpacity={0.7}
           >
-            {typeof RightIcon === 'function' ? (
-              RightIcon({ size: 16, color: colors.mutedForeground })
-            ) : (
-              RightIcon
-            )}
+            <RightIcon size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
       </View>

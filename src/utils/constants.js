@@ -60,6 +60,12 @@ export const OTP_ENDPOINTS = {
   verify: "/auth/verify-otp",
 };
 
+// Beaches Endpoints - matching web app
+export const beachesEndpoints = {
+  list: "/beaches",
+  getById: (id) => `/beaches/${id}`,
+};
+
 // Orders Endpoints - matching web app
 export const ordersEndpoints = {
   list: "/orders",

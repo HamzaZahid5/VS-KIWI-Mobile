@@ -3,21 +3,21 @@
  * Reusable button component matching web app styling
  */
 
-import React from 'react';
+import React from "react";
 import {
   TouchableOpacity,
   Text,
   StyleSheet,
   ActivityIndicator,
   View,
-} from 'react-native';
-import { colors, fontSizes, spacing, borderRadius, shadows } from '../theme';
+} from "react-native";
+import { colors, fontSizes, spacing, borderRadius, shadows } from "../theme";
 
 const Button = ({
   title,
   onPress,
-  variant = 'default',
-  size = 'lg',
+  variant = "default",
+  size = "lg",
   disabled = false,
   loading = false,
   icon: Icon,
@@ -52,7 +52,9 @@ const Button = ({
         <View style={styles.loadingContainer}>
           <ActivityIndicator
             size="small"
-            color={variant === 'outline' ? colors.primary : colors.primaryForeground}
+            color={
+              variant === "outline" ? colors.primary : colors.primaryForeground
+            }
           />
           <Text style={[buttonTextStyle, { marginLeft: spacing.sm }]}>
             {title}
@@ -62,7 +64,7 @@ const Button = ({
         <View style={styles.contentContainer}>
           {Icon && (
             <View style={styles.icon}>
-              {typeof Icon === 'function' ? <Icon /> : Icon}
+              {typeof Icon === "function" ? <Icon /> : Icon}
             </View>
           )}
           <Text style={buttonTextStyle}>{title}</Text>
@@ -75,20 +77,20 @@ const Button = ({
 const styles = StyleSheet.create({
   button: {
     borderRadius: borderRadius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
   },
   button_default: {
     backgroundColor: colors.primary,
   },
   button_outline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: colors.border,
   },
   button_ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   button_destructive: {
     backgroundColor: colors.destructive,
@@ -112,8 +114,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   text: {
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   text_default: {
     color: colors.primaryForeground,
@@ -137,14 +139,14 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.bodySmall,
   },
   contentContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   icon: {
     marginRight: spacing.xs,
@@ -152,4 +154,3 @@ const styles = StyleSheet.create({
 });
 
 export default Button;
-

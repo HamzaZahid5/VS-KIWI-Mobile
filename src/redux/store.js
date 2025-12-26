@@ -8,14 +8,15 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { combineReducers } from '@reduxjs/toolkit';
 import bookingReducer from './bookingSlice';
+import bookingFlowReducer from './bookingFlowSlice';
 import authReducer from './authSlice';
 
 // Redux-persist configuration
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  // Persist booking and auth data
-  whitelist: ['booking', 'auth'],
+  // Persist booking, bookingFlow and auth data
+  whitelist: ['booking', 'bookingFlow', 'auth'],
   // Transform to exclude non-serializable data
   transforms: [],
 };
@@ -23,6 +24,7 @@ const persistConfig = {
 // Combine all reducers
 const rootReducer = combineReducers({
   booking: bookingReducer,
+  bookingFlow: bookingFlowReducer,
   auth: authReducer,
 });
 

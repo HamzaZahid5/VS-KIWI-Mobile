@@ -65,18 +65,23 @@ export const fontSizes = {
   display: 32,
   displaySmall: 28,
   
-  // Heading sizes
+  // Heading sizes (matching Tailwind)
+  '3xl': 30, // text-3xl
+  '2xl': 24, // text-2xl
+  xl: 20,    // text-xl
+  lg: 18,    // text-lg
+  base: 16,  // text-base
+  sm: 14,    // text-sm
+  xs: 12,    // text-xs
+  
+  // Legacy sizes (for backward compatibility)
   h1: 24,
   h2: 20,
   h3: 18,
   h4: 16,
-  
-  // Body sizes
   body: 16,
   bodySmall: 14,
   bodyLarge: 18,
-  
-  // Caption and label sizes
   caption: 12,
   label: 14,
   button: 16,

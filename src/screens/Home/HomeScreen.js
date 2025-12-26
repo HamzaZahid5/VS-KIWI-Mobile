@@ -91,6 +91,8 @@ const HomeScreen = ({ navigation }) => {
     try {
       setOrdersLoading(true);
       const response = await get(ordersEndpoints.active);
+      console.log("Active orfers", response?.data);
+
       setActiveOrdersData(response);
     } catch (error) {
       console.error("Error fetching active orders:", error);
@@ -119,9 +121,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleNewBooking = () => {
-    navigation.replace("Login");
-
-    // navigation.navigate("Book");
+    navigation.navigate("Booking");
   };
 
   const activeOrders = Array.isArray(activeOrdersData?.data)
