@@ -3,11 +3,11 @@
  * Stat card component matching web app exactly
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Card from './Card';
-import { colors, fontSizes, spacing, borderRadius } from '../theme';
-import { withOpacity } from '../utils/colorHelper';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import Card from "./Card";
+import { colors, fontSizes, spacing, borderRadius } from "../theme";
+import { withOpacity } from "../utils/colorHelper";
 
 const StatCard = ({
   title,
@@ -37,32 +37,31 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.md,
   },
   iconContainer: {
     width: 48,
     height: 48,
     borderRadius: borderRadius.round,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   textContainer: {
     flex: 1,
   },
   title: {
-    fontSize: fontSizes.bodySmall,
-    fontWeight: '500',
+    fontSize: fontSizes.caption,
+    fontWeight: "500",
     color: colors.mutedForeground,
     marginBottom: spacing.xs,
   },
   value: {
-    fontSize: fontSizes.h1,
-    fontWeight: '700',
+    fontSize: fontSizes.h3,
+    fontWeight: "700",
     color: colors.foreground,
   },
 });
 
 export default StatCard;
-

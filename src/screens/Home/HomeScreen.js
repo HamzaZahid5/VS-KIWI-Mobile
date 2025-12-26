@@ -50,6 +50,7 @@ const HomeScreen = ({ navigation }) => {
   const [activeOrdersData, setActiveOrdersData] = useState(null);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState("active"); // 'active' or 'upcoming'
 
   // Mock upcoming bookings (matching web app)
   const [upcomingBookings] = useState([
@@ -167,8 +168,8 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Stats Cards Section */}
         <View style={styles.statsSection}>
-          <View style={[styles.statsGrid, isTablet && styles.statsGridTablet]}>
-            <View style={isTablet && styles.statsGridTabletItem}>
+          <View style={styles.statsGrid}>
+            <View style={styles.statCardWrapper}>
               <StatCard
                 title="Active Bookings"
                 value={activeOrders.length}
@@ -177,7 +178,7 @@ const HomeScreen = ({ navigation }) => {
                 iconColor={colors.primary}
               />
             </View>
-            <View style={isTablet && styles.statsGridTabletItem}>
+            <View style={styles.statCardWrapper}>
               <StatCard
                 title="Upcoming Bookings"
                 value={upcomingBookings.length}
@@ -186,7 +187,7 @@ const HomeScreen = ({ navigation }) => {
                 iconColor="#3B82F6"
               />
             </View>
-            <View style={isTablet && styles.statsGridTabletItem}>
+            <View style={styles.statCardWrapper}>
               <StatCard
                 title="Total Spent"
                 value={`$${totalSpent.toFixed(2)}`}
@@ -195,7 +196,7 @@ const HomeScreen = ({ navigation }) => {
                 iconColor="#10B981"
               />
             </View>
-            <View style={isTablet && styles.statsGridTabletItem}>
+            <View style={styles.statCardWrapper}>
               <StatCard
                 title="Total Beanbags"
                 value={1}
@@ -207,137 +208,228 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Active Bookings Section */}
+        {/* Bookings Section with Tab Switcher */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Active Bookings</Text>
-            {activeOrders.length > 0 && (
-              <Badge variant="secondary">{activeOrders.length} Active</Badge>
-            )}
+            <Text style={styles.sectionTitle}>My Bookings</Text>
           </View>
 
-          {ordersLoading ? (
-            <View style={styles.skeletonGrid}>
-              {[1, 2, 3].map((i) => (
-                <Skeleton
-                  key={i}
-                  width="100%"
-                  height={256}
-                  style={styles.skeletonCard}
-                />
-              ))}
-            </View>
-          ) : activeOrders.length > 0 ? (
-            <View
-              style={[
-                styles.bookingsGrid,
-                isTablet && styles.bookingsGridTablet,
-              ]}
+          {/* Tab Switcher */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "active" && styles.tabActive]}
+              onPress={() => setActiveTab("active")}
+              activeOpacity={0.7}
             >
-              {activeOrders.map((order) => (
-                <BookingCard
-                  key={order.id}
-                  order={order}
-                  onPress={() => handleBookingPress(order.id)}
-                  onExtendPress={() => handleExtendPress(order.id)}
-                />
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <EmptyState
-                icon={Clock}
-                title="No active bookings"
-                description="You don't have any active bookings at the moment."
-                buttonText="Book Now"
-                onButtonPress={handleNewBooking}
+              <Clock
+                size={18}
+                color={
+                  activeTab === "active"
+                    ? colors.primary
+                    : colors.mutedForeground
+                }
               />
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "active" && styles.tabTextActive,
+                ]}
+              >
+                Active
+              </Text>
+              {activeOrders.length > 0 && (
+                <View
+                  style={[
+                    styles.tabBadge,
+                    activeTab === "active" && styles.tabBadgeActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabBadgeText,
+                      activeTab === "active" && styles.tabBadgeTextActive,
+                    ]}
+                  >
+                    {activeOrders.length}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "upcoming" && styles.tabActive]}
+              onPress={() => setActiveTab("upcoming")}
+              activeOpacity={0.7}
+            >
+              <Calendar
+                size={18}
+                color={
+                  activeTab === "upcoming"
+                    ? colors.primary
+                    : colors.mutedForeground
+                }
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "upcoming" && styles.tabTextActive,
+                ]}
+              >
+                Upcoming
+              </Text>
+              {upcomingBookings.length > 0 && (
+                <View
+                  style={[
+                    styles.tabBadge,
+                    activeTab === "upcoming" && styles.tabBadgeActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabBadgeText,
+                      activeTab === "upcoming" && styles.tabBadgeTextActive,
+                    ]}
+                  >
+                    {upcomingBookings.length}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Active Bookings Content */}
+          {activeTab === "active" && (
+            <View style={styles.tabContent}>
+              {ordersLoading ? (
+                <View style={styles.skeletonGrid}>
+                  {[1, 2].map((i) => (
+                    <Skeleton
+                      key={i}
+                      width="100%"
+                      height={220}
+                      style={styles.skeletonCard}
+                    />
+                  ))}
+                </View>
+              ) : activeOrders.length > 0 ? (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalScrollContent}
+                >
+                  {activeOrders.map((order) => (
+                    <View key={order.id} style={styles.horizontalCard}>
+                      <BookingCard
+                        order={order}
+                        onPress={() => handleBookingPress(order.id)}
+                        onExtendPress={() => handleExtendPress(order.id)}
+                      />
+                    </View>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <EmptyState
+                    icon={Clock}
+                    title="No active bookings"
+                    description="You don't have any active bookings at the moment."
+                    buttonText="Book Now"
+                    onButtonPress={handleNewBooking}
+                  />
+                </View>
+              )}
             </View>
           )}
-        </View>
 
-        {/* Upcoming Bookings Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
-          </View>
+          {/* Upcoming Bookings Content */}
+          {activeTab === "upcoming" && (
+            <View style={styles.tabContent}>
+              {upcomingBookings.length > 0 ? (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalScrollContent}
+                >
+                  {upcomingBookings.map((booking) => (
+                    <View key={booking.id} style={styles.horizontalCard}>
+                      <View style={styles.upcomingCard}>
+                        <View style={styles.upcomingHeader}>
+                          <View style={styles.upcomingHeaderLeft}>
+                            <Text style={styles.upcomingId}>
+                              Booking #{booking.id}
+                            </Text>
+                            <Text style={styles.upcomingLocation}>
+                              {booking.location}
+                            </Text>
+                          </View>
+                          <Badge
+                            style={[
+                              styles.upcomingBadge,
+                              {
+                                backgroundColor: withOpacity(
+                                  colors.primary,
+                                  0.1
+                                ),
+                              },
+                            ]}
+                            textStyle={{ color: colors.primary }}
+                          >
+                            Upcoming
+                          </Badge>
+                        </View>
 
-          {upcomingBookings.length > 0 ? (
-            <View
-              style={[
-                styles.bookingsGrid,
-                isTablet && styles.bookingsGridTablet,
-              ]}
-            >
-              {upcomingBookings.map((booking) => (
-                <View key={booking.id} style={styles.upcomingCard}>
-                  <View style={styles.upcomingHeader}>
-                    <View>
-                      <Text style={styles.upcomingId}>
-                        Booking #{booking.id}
-                      </Text>
-                      <Text style={styles.upcomingLocation}>
-                        {booking.location}
-                      </Text>
+                        <View style={styles.upcomingDetails}>
+                          <View style={styles.upcomingDetailRow}>
+                            <Calendar size={18} color={colors.primary} />
+                            <Text style={styles.upcomingDetailText}>
+                              {format(new Date(booking.date), "MMM d, yyyy")}
+                            </Text>
+                          </View>
+
+                          <View style={styles.upcomingDetailRow}>
+                            <MapPin size={18} color={colors.primary} />
+                            <Text style={styles.upcomingDetailText}>
+                              {booking.beanbags} Beanbags
+                            </Text>
+                          </View>
+
+                          <View style={styles.upcomingDetailRow}>
+                            <DollarSign size={18} color={colors.primary} />
+                            <Text
+                              style={[
+                                styles.upcomingDetailText,
+                                styles.upcomingPrice,
+                              ]}
+                            >
+                              ${booking.price.toFixed(2)}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <TouchableOpacity
+                          style={styles.upcomingButton}
+                          onPress={() => handleBookingPress(booking.id)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.upcomingButtonText}>
+                            View Details
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                    <Badge
-                      style={[
-                        styles.upcomingBadge,
-                        { backgroundColor: withOpacity(colors.primary, 0.1) },
-                      ]}
-                      textStyle={{ color: colors.primary }}
-                    >
-                      Upcoming
-                    </Badge>
-                  </View>
-
-                  <View style={styles.upcomingDetails}>
-                    <View style={styles.upcomingDetailRow}>
-                      <Calendar size={20} color={colors.primary} />
-                      <Text style={styles.upcomingDetailText}>
-                        {format(new Date(booking.date), "MMM d, yyyy")}
-                      </Text>
-                    </View>
-
-                    <View style={styles.upcomingDetailRow}>
-                      <MapPin size={20} color={colors.primary} />
-                      <Text style={styles.upcomingDetailText}>
-                        {booking.beanbags} Beanbags
-                      </Text>
-                    </View>
-
-                    <View style={styles.upcomingDetailRow}>
-                      <DollarSign size={20} color={colors.primary} />
-                      <Text
-                        style={[
-                          styles.upcomingDetailText,
-                          styles.upcomingPrice,
-                        ]}
-                      >
-                        ${booking.price.toFixed(2)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.upcomingButton}
-                    onPress={() => handleBookingPress(booking.id)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.upcomingButtonText}>View Details</Text>
-                  </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <EmptyState
+                    icon={AlertCircle}
+                    title="No upcoming bookings"
+                    description="Start your beach adventure by booking beanbags today!"
+                    buttonText="Book Now"
+                    onButtonPress={handleNewBooking}
+                  />
                 </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <EmptyState
-                icon={AlertCircle}
-                title="No upcoming bookings"
-                description="Start your beach adventure by booking beanbags today!"
-                buttonText="Book Now"
-                onButtonPress={handleNewBooking}
-              />
+              )}
             </View>
           )}
         </View>
@@ -407,15 +499,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   statsGrid: {
-    gap: spacing.md,
-  },
-  statsGridTablet: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
-  statsGridTabletItem: {
-    width: isTablet ? "48%" : "100%",
+  statCardWrapper: {
+    width: isTablet 
+      ? (width - spacing.md * 5) / 4  // 4 cards per row on tablet
+      : (width - spacing.md * 3) / 2, // 2 cards per row on mobile
     marginBottom: spacing.md,
   },
   section: {
@@ -431,6 +522,69 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? fontSizes.displaySmall : fontSizes.h1,
     fontWeight: "700",
     color: colors.foreground,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: colors.muted + "40",
+    borderRadius: borderRadius.medium,
+    padding: spacing.xs,
+    marginBottom: spacing.lg,
+    gap: spacing.xs,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.small,
+    backgroundColor: "transparent",
+  },
+  tabActive: {
+    backgroundColor: colors.background,
+    ...shadows.small,
+  },
+  tabText: {
+    fontSize: fontSizes.body,
+    fontWeight: "500",
+    color: colors.mutedForeground,
+  },
+  tabTextActive: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  tabBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.muted,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xs,
+  },
+  tabBadgeActive: {
+    backgroundColor: colors.primary,
+  },
+  tabBadgeText: {
+    fontSize: fontSizes.xs,
+    fontWeight: "600",
+    color: colors.mutedForeground,
+  },
+  tabBadgeTextActive: {
+    color: colors.textWhite,
+  },
+  tabContent: {
+    minHeight: 200,
+  },
+  horizontalScrollContent: {
+    paddingRight: spacing.md,
+    gap: spacing.md,
+  },
+  horizontalCard: {
+    width: isTablet ? 380 : width - spacing.md * 3,
+    marginRight: spacing.md,
   },
   bookingsGrid: {
     gap: spacing.md,
@@ -453,14 +607,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.lg,
-    marginBottom: spacing.md,
     ...shadows.small,
+    height: "100%",
   },
   upcomingHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: spacing.md,
+  },
+  upcomingHeaderLeft: {
+    flex: 1,
+    marginRight: spacing.sm,
   },
   upcomingId: {
     fontSize: fontSizes.bodySmall,
