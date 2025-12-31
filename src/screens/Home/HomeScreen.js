@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  FlatList,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -31,6 +32,7 @@ import Button from "../../components/Button";
 import Badge from "../../components/Badge";
 import StatCard from "../../components/StatCard";
 import BookingCard from "../../components/BookingCard";
+import UpcomingBookingCard from "../../components/UpcomingBookingCard";
 import EmptyState from "../../components/EmptyState";
 import Skeleton from "../../components/Skeleton";
 import { get } from "../../utils/api";
@@ -92,7 +94,12 @@ const HomeScreen = ({ navigation }) => {
     try {
       setOrdersLoading(true);
       const response = await get(ordersEndpoints.active);
-      console.log("Active orfers", response?.data);
+      console.log("Active orders response:", response);
+      console.log("Active orders data:", response?.data);
+      console.log(
+        "Active orders count:",
+        Array.isArray(response?.data) ? response.data.length : 0
+      );
 
       setActiveOrdersData(response);
     } catch (error) {
@@ -125,9 +132,44 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate("Booking");
   };
 
-  const activeOrders = Array.isArray(activeOrdersData?.data)
-    ? activeOrdersData.data
-    : [];
+  // Extract active orders from response
+  // API response structure: { statusCode: 200, data: [...orders...], message: "..." }
+  const activeOrders = React.useMemo(() => {
+    if (!activeOrdersData) return [];
+
+    // Check if data is directly an array
+    if (Array.isArray(activeOrdersData)) {
+      console.log(
+        "Active orders: response is array, count:",
+        activeOrdersData.length
+      );
+      return activeOrdersData;
+    }
+
+    // Check if data is nested in response.data
+    if (Array.isArray(activeOrdersData?.data)) {
+      console.log(
+        "Active orders: found in response.data, count:",
+        activeOrdersData.data.length
+      );
+      return activeOrdersData.data;
+    }
+
+    // Check if data is nested in response.data.data (double nested)
+    if (Array.isArray(activeOrdersData?.data?.data)) {
+      console.log(
+        "Active orders: found in response.data.data, count:",
+        activeOrdersData.data.data.length
+      );
+      return activeOrdersData.data.data;
+    }
+
+    console.warn(
+      "Active orders: unexpected response structure",
+      activeOrdersData
+    );
+    return [];
+  }, [activeOrdersData]);
   const totalSpent = upcomingBookings.reduce(
     (sum, booking) => sum + (booking.price || 0),
     0
@@ -137,6 +179,7 @@ const HomeScreen = ({ navigation }) => {
   if (ordersLoading && !activeOrdersData) {
     return <LoadingSkeleton />;
   }
+  console.log("\n\nupcomingBookings", upcomingBookings);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -312,21 +355,19 @@ const HomeScreen = ({ navigation }) => {
                   ))}
                 </View>
               ) : activeOrders.length > 0 ? (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.horizontalScrollContent}
-                >
-                  {activeOrders.map((order) => (
-                    <View key={order.id} style={styles.horizontalCard}>
-                      <BookingCard
-                        order={order}
-                        onPress={() => handleBookingPress(order.id)}
-                        onExtendPress={() => handleExtendPress(order.id)}
-                      />
-                    </View>
-                  ))}
-                </ScrollView>
+                <FlatList
+                  data={activeOrders}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.verticalScrollContent}
+                  renderItem={({ item: order }) => (
+                    <BookingCard
+                      order={order}
+                      onPress={() => handleBookingPress(order.id)}
+                      onExtendPress={() => handleExtendPress(order.id)}
+                    />
+                  )}
+                />
               ) : (
                 <View style={styles.emptyContainer}>
                   <EmptyState
@@ -345,80 +386,18 @@ const HomeScreen = ({ navigation }) => {
           {activeTab === "upcoming" && (
             <View style={styles.tabContent}>
               {upcomingBookings.length > 0 ? (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.horizontalScrollContent}
-                >
-                  {upcomingBookings.map((booking) => (
-                    <View key={booking.id} style={styles.horizontalCard}>
-                      <View style={styles.upcomingCard}>
-                        <View style={styles.upcomingHeader}>
-                          <View style={styles.upcomingHeaderLeft}>
-                            <Text style={styles.upcomingId}>
-                              Booking #{booking.id}
-                            </Text>
-                            <Text style={styles.upcomingLocation}>
-                              {booking.location}
-                            </Text>
-                          </View>
-                          <Badge
-                            style={[
-                              styles.upcomingBadge,
-                              {
-                                backgroundColor: withOpacity(
-                                  colors.primary,
-                                  0.1
-                                ),
-                              },
-                            ]}
-                            textStyle={{ color: colors.primary }}
-                          >
-                            Upcoming
-                          </Badge>
-                        </View>
-
-                        <View style={styles.upcomingDetails}>
-                          <View style={styles.upcomingDetailRow}>
-                            <Calendar size={18} color={colors.primary} />
-                            <Text style={styles.upcomingDetailText}>
-                              {format(new Date(booking.date), "MMM d, yyyy")}
-                            </Text>
-                          </View>
-
-                          <View style={styles.upcomingDetailRow}>
-                            <MapPin size={18} color={colors.primary} />
-                            <Text style={styles.upcomingDetailText}>
-                              {booking.beanbags} Beanbags
-                            </Text>
-                          </View>
-
-                          <View style={styles.upcomingDetailRow}>
-                            <DollarSign size={18} color={colors.primary} />
-                            <Text
-                              style={[
-                                styles.upcomingDetailText,
-                                styles.upcomingPrice,
-                              ]}
-                            >
-                              ${booking.price.toFixed(2)}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <TouchableOpacity
-                          style={styles.upcomingButton}
-                          onPress={() => handleBookingPress(booking.id)}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.upcomingButtonText}>
-                            View Details
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ))}
-                </ScrollView>
+                <FlatList
+                  data={upcomingBookings}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.verticalScrollContent}
+                  renderItem={({ item: booking }) => (
+                    <UpcomingBookingCard
+                      booking={booking}
+                      onPress={() => handleBookingPress(booking.id)}
+                    />
+                  )}
+                />
               ) : (
                 <View style={styles.emptyContainer}>
                   <EmptyState
@@ -504,8 +483,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   statCardWrapper: {
-    width: isTablet 
-      ? (width - spacing.md * 5) / 4  // 4 cards per row on tablet
+    width: isTablet
+      ? (width - spacing.md * 5) / 4 // 4 cards per row on tablet
       : (width - spacing.md * 3) / 2, // 2 cards per row on mobile
     marginBottom: spacing.md,
   },
@@ -578,13 +557,9 @@ const styles = StyleSheet.create({
   tabContent: {
     minHeight: 200,
   },
-  horizontalScrollContent: {
-    paddingRight: spacing.md,
+  verticalScrollContent: {
     gap: spacing.md,
-  },
-  horizontalCard: {
-    width: isTablet ? 380 : width - spacing.md * 3,
-    marginRight: spacing.md,
+    paddingBottom: spacing.md,
   },
   bookingsGrid: {
     gap: spacing.md,

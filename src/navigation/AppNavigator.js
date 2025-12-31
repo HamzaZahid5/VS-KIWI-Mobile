@@ -15,6 +15,7 @@ import { selectIsAuthenticated } from '../redux/authSlice';
 import HomeScreen from '../screens/Home/HomeScreen';
 import BookingScreen from '../screens/Booking/BookingScreen';
 import BookingDetailsScreen from '../screens/BookingDetails/BookingDetailsScreen';
+import PaymentScreen from '../screens/Payment/PaymentScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
@@ -133,6 +134,13 @@ const AppNavigator = () => {
           component={BookingDetailsScreen}
           options={{
             headerShown: false, // BookingDetails screen has its own header
+          }}
+        />
+        <Stack.Screen
+          name="Payment"
+          component={PaymentScreen}
+          options={{
+            headerShown: false, // Payment screen has its own header
           }}
         />
         <Stack.Screen

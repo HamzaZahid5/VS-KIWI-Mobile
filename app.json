@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "scheme": "kiwi",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
@@ -23,6 +24,15 @@
       }
     },
     "web": {},
+    "plugins": [
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": [],
+          "enableGooglePay": true
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "6a722c73-7cc6-4251-8df6-d03a46b3c952"

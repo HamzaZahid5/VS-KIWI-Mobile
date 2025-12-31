@@ -262,32 +262,28 @@ const BookingScreen = ({ navigation, route }) => {
                   const response = await post(ordersEndpoints.create, payload);
 
                   if (response?.data?.id) {
-                    // TODO: Implement Payment screen for Stripe payments
-                    // For now, navigate to Home for both payment methods
-                    // When Payment screen is implemented, uncomment the Stripe navigation:
-                    // if (
-                    //   bookingData.paymentMethod === "stripe" &&
-                    //   response?.data?.clientSecret
-                    // ) {
-                    //   navigation.navigate("Payment", {
-                    //     orderId: response.data.id,
-                    //     clientSecret: response.data.clientSecret,
-                    //   });
-                    // } else {
-                    //   navigation.navigate("Home");
-                    // }
-
-                    // Navigate to Home and show success message
-                    Alert.alert(
-                      "Booking Confirmed!",
-                      `Your booking has been created successfully. Order ID: ${response.data.id}`,
-                      [
-                        {
-                          text: "OK",
-                          onPress: () => navigation.navigate("Home"),
-                        },
-                      ]
-                    );
+                    // Navigate to Payment screen for Stripe payments
+                    if (
+                      bookingData.paymentMethod === "stripe" &&
+                      response?.data?.clientSecret
+                    ) {
+                      navigation.navigate("Payment", {
+                        orderId: response.data.id,
+                        clientSecret: response.data.clientSecret,
+                      });
+                    } else {
+                      // For COD or if no clientSecret, navigate to Home
+                      Alert.alert(
+                        "Booking Confirmed!",
+                        `Your booking has been created successfully. Order ID: ${response.data.id}`,
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => navigation.navigate("Home"),
+                          },
+                        ]
+                      );
+                    }
                   }
                 } catch (error) {
                   console.error("Error creating order:", error);
