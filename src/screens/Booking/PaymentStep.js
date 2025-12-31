@@ -3,30 +3,25 @@
  * Select payment method
  */
 
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { CreditCard, Banknote, Info, ChevronRight } from 'lucide-react-native';
-import { colors, spacing, fontSizes, borderRadius } from '../../theme';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { CreditCard, Banknote, Info, ChevronRight } from "lucide-react-native";
+import { colors, spacing, fontSizes, borderRadius } from "../../theme";
 import {
   selectBookingData,
   setPaymentMethod,
   nextStep,
-} from '../../redux/bookingFlowSlice';
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import Badge from '../../components/Badge';
+} from "../../redux/bookingFlowSlice";
+import Card from "../../components/Card";
+import Button from "../../components/Button";
+import Badge from "../../components/Badge";
 
 const PaymentStep = () => {
   const dispatch = useDispatch();
   const bookingData = useSelector(selectBookingData);
   const { paymentMethod, bookingType } = bookingData;
-  const isPreBook = bookingType === 'pre_book';
+  const isPreBook = bookingType === "pre_book";
 
   return (
     <View style={styles.container}>
@@ -38,13 +33,15 @@ const PaymentStep = () => {
       <View style={styles.options}>
         {/* Stripe Payment */}
         <TouchableOpacity
-          onPress={() => dispatch(setPaymentMethod('stripe'))}
+          onPress={() => dispatch(setPaymentMethod("stripe"))}
           activeOpacity={0.7}
         >
-          <Card style={[
-            styles.optionCard,
-            paymentMethod === 'stripe' && styles.optionCardSelected,
-          ]}>
+          <Card
+            style={[
+              styles.optionCard,
+              paymentMethod === "stripe" && styles.optionCardSelected,
+            ]}
+          >
             <View style={styles.optionContent}>
               <View style={styles.optionLeft}>
                 <CreditCard size={20} color={colors.primary} />
@@ -62,23 +59,30 @@ const PaymentStep = () => {
 
         {/* Cash on Delivery */}
         <TouchableOpacity
-          onPress={() => !isPreBook && dispatch(setPaymentMethod('cod'))}
+          onPress={() => !isPreBook && dispatch(setPaymentMethod("cod"))}
           disabled={isPreBook}
           activeOpacity={0.7}
         >
-          <Card style={[
-            styles.optionCard,
-            paymentMethod === 'cod' && styles.optionCardSelected,
-            isPreBook && styles.optionCardDisabled,
-          ]}>
+          <Card
+            style={[
+              styles.optionCard,
+              paymentMethod === "cod" && styles.optionCardSelected,
+              isPreBook && styles.optionCardDisabled,
+            ]}
+          >
             <View style={styles.optionContent}>
               <View style={styles.optionLeft}>
-                <Banknote size={20} color={isPreBook ? colors.textMuted : colors.primary} />
+                <Banknote
+                  size={20}
+                  color={isPreBook ? colors.textMuted : colors.primary}
+                />
                 <View style={styles.optionText}>
-                  <Text style={[
-                    styles.optionTitle,
-                    isPreBook && styles.optionTitleDisabled,
-                  ]}>
+                  <Text
+                    style={[
+                      styles.optionTitle,
+                      isPreBook && styles.optionTitleDisabled,
+                    ]}
+                  >
                     Cash on Delivery
                   </Text>
                   <Text style={styles.optionDescription}>
@@ -87,7 +91,9 @@ const PaymentStep = () => {
                   {isPreBook && (
                     <View style={styles.warningInfo}>
                       <Info size={14} color={colors.warning} />
-                      <Text style={styles.warningText}>Not available for pre-bookings</Text>
+                      <Text style={styles.warningText}>
+                        Not available for pre-bookings
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -101,7 +107,7 @@ const PaymentStep = () => {
         title="Continue"
         onPress={() => dispatch(nextStep())}
         style={styles.continueButton}
-        icon={<ChevronRight size={20} color={colors.textWhite} />}
+        // icon={<ChevronRight size={20} color={colors.textWhite} />}
       />
     </View>
   );
@@ -115,8 +121,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   title: {
-    fontSize: fontSizes['2xl'],
-    fontWeight: '700',
+    fontSize: fontSizes["2xl"],
+    fontWeight: "700",
     color: colors.text,
     marginBottom: spacing.xs,
   },
@@ -134,20 +140,20 @@ const styles = StyleSheet.create({
   },
   optionCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: colors.primary + '05',
+    backgroundColor: colors.primary + "05",
   },
   optionCardDisabled: {
     opacity: 0.5,
   },
   optionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: spacing.md,
   },
   optionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
     gap: spacing.md,
   },
@@ -156,7 +162,7 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: fontSizes.lg,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginBottom: spacing.xs / 2,
   },
@@ -168,8 +174,8 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   warningInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.xs,
     marginTop: spacing.xs,
   },
@@ -183,4 +189,3 @@ const styles = StyleSheet.create({
 });
 
 export default PaymentStep;
-

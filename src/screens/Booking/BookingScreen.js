@@ -122,9 +122,9 @@ const BookingScreen = ({ navigation, route }) => {
     dispatch(goToStep(targetStep));
   };
 
-  // if (beachesLoading) {
-  //   return <LoadingSkeleton />;
-  // }
+  if (beachesLoading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>

@@ -3,7 +3,7 @@
  * App settings and preferences
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -13,10 +13,10 @@ import {
   SafeAreaView,
   Switch,
   Alert,
-} from 'react-native';
-import { useDispatch } from 'react-redux';
-import { colors, fontSizes, spacing, borderRadius, shadows } from '../theme';
-import { clearAllBookings } from '../redux/bookingSlice';
+} from "react-native";
+import { useDispatch } from "react-redux";
+import { colors, fontSizes, spacing, borderRadius, shadows } from "../theme";
+import { clearAllBookings } from "../redux/bookingSlice";
 
 const SettingsScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -26,16 +26,16 @@ const SettingsScreen = ({ navigation }) => {
   // Handle clearing all bookings
   const handleClearAllBookings = () => {
     Alert.alert(
-      'Clear All Bookings',
-      'Are you sure you want to delete all bookings? This action cannot be undone.',
+      "Clear All Bookings",
+      "Are you sure you want to delete all bookings? This action cannot be undone.",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Clear All',
-          style: 'destructive',
+          text: "Clear All",
+          style: "destructive",
           onPress: () => {
             dispatch(clearAllBookings());
-            Alert.alert('Success', 'All bookings have been cleared.');
+            Alert.alert("Success", "All bookings have been cleared.");
           },
         },
       ]
@@ -45,9 +45,9 @@ const SettingsScreen = ({ navigation }) => {
   // Handle app info
   const handleAppInfo = () => {
     Alert.alert(
-      'Kiwi Rentals',
-      'Version 1.0.0\n\nYour trusted partner for quality rentals.',
-      [{ text: 'OK' }]
+      "Kiwi Rentals",
+      "Version 1.0.0\n\nYour trusted partner for quality rentals.",
+      [{ text: "OK" }]
     );
   };
 
@@ -57,7 +57,7 @@ const SettingsScreen = ({ navigation }) => {
         {/* Preferences Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
-          
+
           <View style={styles.settingItem}>
             <View style={styles.settingContent}>
               <Text style={styles.settingLabel}>Push Notifications</Text>
@@ -69,7 +69,9 @@ const SettingsScreen = ({ navigation }) => {
               value={notificationsEnabled}
               onValueChange={setNotificationsEnabled}
               trackColor={{ false: colors.border, true: colors.primaryLight }}
-              thumbColor={notificationsEnabled ? colors.primary : colors.textLight}
+              thumbColor={
+                notificationsEnabled ? colors.primary : colors.textLight
+              }
             />
           </View>
 
@@ -94,7 +96,7 @@ const SettingsScreen = ({ navigation }) => {
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
-          
+
           <TouchableOpacity style={styles.settingButton}>
             <Text style={styles.settingButtonText}>Edit Profile</Text>
             <Text style={styles.settingButtonArrow}>›</Text>
@@ -118,7 +120,7 @@ const SettingsScreen = ({ navigation }) => {
         {/* Data Management Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data Management</Text>
-          
+
           <TouchableOpacity
             style={[styles.settingButton, styles.dangerButton]}
             onPress={handleClearAllBookings}
@@ -132,7 +134,7 @@ const SettingsScreen = ({ navigation }) => {
         {/* About Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
-          
+
           <TouchableOpacity
             style={styles.settingButton}
             onPress={handleAppInfo}
@@ -160,7 +162,7 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <TouchableOpacity
             style={styles.navButton}
-            onPress={() => navigation.navigate('Home')}
+            onPress={() => navigation.navigate("Home")}
           >
             <Text style={styles.navButtonText}>Back to Home</Text>
           </TouchableOpacity>
@@ -187,14 +189,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: fontSizes.h3,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textDark,
     marginBottom: spacing.md,
   },
   settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: spacing.sm,
   },
   settingContent: {
@@ -203,7 +205,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: fontSizes.body,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.textDark,
     marginBottom: spacing.xs,
   },
@@ -212,9 +214,9 @@ const styles = StyleSheet.create({
     color: colors.textLight,
   },
   settingButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: spacing.sm,
   },
   settingButtonText: {
@@ -244,14 +246,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     padding: spacing.md,
     borderRadius: borderRadius.medium,
-    alignItems: 'center',
+    alignItems: "center",
   },
   navButtonText: {
     color: colors.textWhite,
     fontSize: fontSizes.button,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 
 export default SettingsScreen;
-

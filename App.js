@@ -64,7 +64,14 @@ export default function App() {
   return (
     <View style={{ flex: 1 }}>
       <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
+        <PersistGate 
+          loading={
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+              {/* Loading state - PersistGate will handle rehydration */}
+            </View>
+          } 
+          persistor={persistor}
+        >
           <StripeProvider
             publishableKey={STRIPE_PUBLIC_KEY || ""}
             merchantIdentifier=""

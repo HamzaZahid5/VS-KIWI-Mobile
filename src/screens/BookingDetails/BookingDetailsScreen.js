@@ -237,7 +237,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate("Home")}
             style={styles.backButton}
             activeOpacity={0.7}
           >
@@ -661,6 +661,7 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     marginBottom: spacing.lg,
+    padding: 10,
   },
   statusHeader: {
     flexDirection: "row",
@@ -740,6 +741,7 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     marginBottom: spacing.lg,
+    padding: 10,
   },
   infoCardTitle: {
     fontSize: fontSizes.h3,

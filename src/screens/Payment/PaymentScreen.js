@@ -55,21 +55,16 @@ const PaymentScreen = ({ navigation, route }) => {
     }
   };
 
-
   const handlePaymentSuccess = async () => {
     // Invalidate order cache by refetching
     try {
       await fetchOrderDetails();
-      Alert.alert(
-        "Payment Successful!",
-        "Your booking has been confirmed.",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.navigate("BookingDetails", { orderId }),
-          },
-        ]
-      );
+      Alert.alert("Payment Successful!", "Your booking has been confirmed.", [
+        {
+          text: "OK",
+          onPress: () => navigation.navigate("BookingDetails", { orderId }),
+        },
+      ]);
     } catch (error) {
       console.error("Error after payment success:", error);
       navigation.navigate("BookingDetails", { orderId });
@@ -130,11 +125,14 @@ const PaymentScreen = ({ navigation, route }) => {
               <CheckCircle size={48} color={colors.primary} />
               <Text style={styles.statusTitle}>Order already paid</Text>
               <Text style={styles.statusText}>
-                This order has already been paid. You can view the booking details.
+                This order has already been paid. You can view the booking
+                details.
               </Text>
               <Button
                 title="View booking details"
-                onPress={() => navigation.navigate("BookingDetails", { orderId })}
+                onPress={() =>
+                  navigation.navigate("BookingDetails", { orderId })
+                }
                 style={styles.statusButton}
               />
             </View>
@@ -169,11 +167,14 @@ const PaymentScreen = ({ navigation, route }) => {
               <AlertCircle size={48} color={colors.mutedForeground} />
               <Text style={styles.statusTitle}>Invalid payment method</Text>
               <Text style={styles.statusText}>
-                This order is not set up for card payment. Please use the booking details page.
+                This order is not set up for card payment. Please use the
+                booking details page.
               </Text>
               <Button
                 title="Go to booking details"
-                onPress={() => navigation.navigate("BookingDetails", { orderId })}
+                onPress={() =>
+                  navigation.navigate("BookingDetails", { orderId })
+                }
                 variant="outline"
                 style={styles.statusButton}
               />
@@ -399,4 +400,3 @@ const styles = StyleSheet.create({
 });
 
 export default PaymentScreen;
-

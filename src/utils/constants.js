@@ -64,17 +64,18 @@ export const OTP_ENDPOINTS = {
 // For Expo: Use EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
 // For production, use environment variable for security
 export const GOOGLE_MAPS_API_KEY =
-  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
-  "AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ";
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || null;
+// EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 // Stripe Public Key - Set via environment variable
 // For Expo: Use EXPO_PUBLIC_STRIPE_PUBLIC_KEY
 // Get this from your Stripe Dashboard: https://dashboard.stripe.com/apikeys
 export const STRIPE_PUBLIC_KEY =
   process.env.EXPO_PUBLIC_STRIPE_PUBLIC_KEY || null;
-export const STRIPE_SECRET_KEY =
-  "sk_test_51SewdRGtz4AlaiVxi5l5ycygQO2loGmg70mRU3rmRPUWS9cXlfsWboEzfIQCoaFalK7OyHocmH7IrHqKfz9vZ8dP00gCHpLUeP";
+// export const STRIPE_SECRET_KEY =
+//   "sk_test_51SewdRGtz4AlaiVxi5l5ycygQO2loGmg70mRU3rmRPUWS9cXlfsWboEzfIQCoaFalK7OyHocmH7IrHqKfz9vZ8dP00gCHpLUeP";
 
+export const STRIPE_SECRET_KEY = process.env.EXPO_SECRET_KEY || null;
 // Beaches Endpoints - matching web app
 export const beachesEndpoints = {
   list: "/beaches",

@@ -4,7 +4,6 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
@@ -37,22 +36,35 @@ const Stack = createStackNavigator();
 const AppNavigator = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const navigationRef = useRef(null);
-  const isInitialMount = useRef(true);
+  const hasCheckedInitialRoute = useRef(false);
 
-  // Only navigate if authentication state changes (not on initial mount)
-  // Since initialRouteName is already "Login", we don't need to navigate on mount
+  // Handle initial route and auth state changes
   useEffect(() => {
-    // Skip navigation on initial mount - let initialRouteName handle it
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    
-    // Only navigate if auth state changes after initial mount
     if (!navigationRef.current?.isReady()) return;
     
     const currentRoute = navigationRef.current.getCurrentRoute();
     
+    // On initial mount, navigate to correct screen based on auth state
+    if (!hasCheckedInitialRoute.current) {
+      hasCheckedInitialRoute.current = true;
+      
+      if (isAuthenticated) {
+        // User is authenticated, go to Home
+        navigationRef.current.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      } else {
+        // User is not authenticated, go to Login
+        navigationRef.current.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      }
+      return;
+    }
+    
+    // After initial mount, handle auth state changes
     // If not authenticated and not on Login screen, navigate to Login
     if (!isAuthenticated && currentRoute?.name !== 'Login') {
       navigationRef.current.reset({
@@ -70,7 +82,24 @@ const AppNavigator = () => {
   }, [isAuthenticated]);
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer 
+      ref={navigationRef}
+      onReady={() => {
+        // Navigation is ready, check auth state and navigate
+        if (!hasCheckedInitialRoute.current && navigationRef.current?.isReady()) {
+          hasCheckedInitialRoute.current = true;
+          
+          if (isAuthenticated) {
+            // User is authenticated, go to Home
+            navigationRef.current.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            });
+          }
+          // If not authenticated, initialRouteName="Login" will handle it
+        }
+      }}
+    >
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{

@@ -3,18 +3,26 @@
  * Select beanbag sizes, quantities, and duration
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-} from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { Plus, Minus, Clock, Calendar, Receipt, AlertCircle, ChevronRight } from 'lucide-react-native';
-import { format, addMinutes } from 'date-fns';
-import { colors, spacing, fontSizes, borderRadius } from '../../theme';
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  Plus,
+  Minus,
+  Clock,
+  Calendar,
+  Receipt,
+  AlertCircle,
+  ChevronRight,
+} from "lucide-react-native";
+import { format, addMinutes } from "date-fns";
+import { colors, spacing, fontSizes, borderRadius } from "../../theme";
 import {
   selectBookingData,
   selectHourlyRate,
@@ -22,27 +30,35 @@ import {
   setQuantity,
   setDuration,
   nextStep,
-} from '../../redux/bookingFlowSlice';
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import Badge from '../../components/Badge';
-import Skeleton from '../../components/Skeleton';
-import Checkbox from '../../components/Checkbox';
+} from "../../redux/bookingFlowSlice";
+import Card from "../../components/Card";
+import Button from "../../components/Button";
+import Badge from "../../components/Badge";
+import Skeleton from "../../components/Skeleton";
+import Checkbox from "../../components/Checkbox";
 
 const DetailsStep = ({ beachData, isLoading }) => {
   const dispatch = useDispatch();
   const bookingData = useSelector(selectBookingData);
   const hourlyRate = useSelector(selectHourlyRate);
-  const { bookingType, scheduledDate, scheduledTime, selectedSizes, durationHours } = bookingData;
+  const {
+    bookingType,
+    scheduledDate,
+    scheduledTime,
+    selectedSizes,
+    durationHours,
+  } = bookingData;
 
   // Calculate available hours
   const availableHours = useMemo(() => {
     if (!beachData?.serviceStartTime || !beachData?.serviceEndTime) return [];
-    const [serviceStartHour] = beachData.serviceStartTime.split(':').map(Number);
-    const [serviceEndHour] = beachData.serviceEndTime.split(':').map(Number);
+    const [serviceStartHour] = beachData.serviceStartTime
+      .split(":")
+      .map(Number);
+    const [serviceEndHour] = beachData.serviceEndTime.split(":").map(Number);
 
-    if (bookingType === 'pre_book' && scheduledTime) {
-      const [scheduledHour] = scheduledTime.split(':').map(Number);
+    if (bookingType === "pre_book" && scheduledTime) {
+      const [scheduledHour] = scheduledTime.split(":").map(Number);
       const maxHours = Math.min(serviceEndHour - scheduledHour, 8);
       if (maxHours <= 0) return [];
       return Array.from({ length: maxHours }, (_, i) => i + 1);
@@ -63,8 +79,8 @@ const DetailsStep = ({ beachData, isLoading }) => {
   // Calculate estimated times
   const estimatedTimes = useMemo(() => {
     const now = new Date();
-    if (bookingType === 'pre_book' && scheduledDate && scheduledTime) {
-      const [hour, minute] = scheduledTime.split(':').map(Number);
+    if (bookingType === "pre_book" && scheduledDate && scheduledTime) {
+      const [hour, minute] = scheduledTime.split(":").map(Number);
       const scheduledDateTime = new Date(scheduledDate);
       scheduledDateTime.setHours(hour, minute || 0, 0, 0);
       const deliveryStart = scheduledDateTime;
@@ -72,10 +88,10 @@ const DetailsStep = ({ beachData, isLoading }) => {
       const rentalEndStart = addMinutes(deliveryStart, durationHours * 60);
       const rentalEndEnd = addMinutes(deliveryEnd, durationHours * 60);
       return {
-        deliveryStart: format(deliveryStart, 'h:mm a'),
-        deliveryEnd: format(deliveryEnd, 'h:mm a'),
-        rentalEndStart: format(rentalEndStart, 'h:mm a'),
-        rentalEndEnd: format(rentalEndEnd, 'h:mm a'),
+        deliveryStart: format(deliveryStart, "h:mm a"),
+        deliveryEnd: format(deliveryEnd, "h:mm a"),
+        rentalEndStart: format(rentalEndStart, "h:mm a"),
+        rentalEndEnd: format(rentalEndEnd, "h:mm a"),
         isPreBook: true,
       };
     }
@@ -84,10 +100,10 @@ const DetailsStep = ({ beachData, isLoading }) => {
     const rentalEndStart = addMinutes(deliveryStart, durationHours * 60);
     const rentalEndEnd = addMinutes(deliveryEnd, durationHours * 60);
     return {
-      deliveryStart: format(deliveryStart, 'h:mm a'),
-      deliveryEnd: format(deliveryEnd, 'h:mm a'),
-      rentalEndStart: format(rentalEndStart, 'h:mm a'),
-      rentalEndEnd: format(rentalEndEnd, 'h:mm a'),
+      deliveryStart: format(deliveryStart, "h:mm a"),
+      deliveryEnd: format(deliveryEnd, "h:mm a"),
+      rentalEndStart: format(rentalEndStart, "h:mm a"),
+      rentalEndEnd: format(rentalEndEnd, "h:mm a"),
       isPreBook: false,
     };
   }, [bookingType, scheduledDate, scheduledTime, durationHours]);
@@ -96,7 +112,7 @@ const DetailsStep = ({ beachData, isLoading }) => {
   const sizes = useMemo(() => {
     if (!beachData?.inventory?.length) return [];
     return beachData.inventory
-      .filter(inv => inv.isActive !== false && inv.availableQuantity > 0)
+      .filter((inv) => inv.isActive !== false && inv.availableQuantity > 0)
       .map((inv, index) => ({
         value: inv.size,
         label: inv.size,
@@ -106,24 +122,25 @@ const DetailsStep = ({ beachData, isLoading }) => {
   }, [beachData?.inventory]);
 
   const isSizeSelected = (size) => {
-    return selectedSizes.some(sq => sq.size === size);
+    return selectedSizes.some((sq) => sq.size === size);
   };
 
   const getSizeQuantity = (size) => {
-    return selectedSizes.find(sq => sq.size === size)?.quantity || 1;
+    return selectedSizes.find((sq) => sq.size === size)?.quantity || 1;
   };
 
   const calculateEstimatedTotal = () => {
     return selectedSizes.reduce((total, sq) => {
-      const sizeInfo = sizes.find(s => s.value === sq.size);
+      const sizeInfo = sizes.find((s) => s.value === sq.size);
       const rate = hourlyRate * (sizeInfo?.priceMultiplier || 1);
-      return total + (rate * durationHours * sq.quantity);
+      return total + rate * durationHours * sq.quantity;
     }, 0);
   };
 
   const estimatedTotal = calculateEstimatedTotal();
 
-  const canProceed = selectedSizes.length > 0 && availableHours.length > 0 && durationHours > 0;
+  const canProceed =
+    selectedSizes.length > 0 && availableHours.length > 0 && durationHours > 0;
 
   if (isLoading) {
     return <DetailsStepSkeleton />;
@@ -133,18 +150,24 @@ const DetailsStep = ({ beachData, isLoading }) => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.title}>Booking Details</Text>
-        <Text style={styles.subtitle}>Choose your beanbag size, quantity, and duration</Text>
+        <Text style={styles.subtitle}>
+          Choose your beanbag size, quantity, and duration
+        </Text>
       </View>
 
       {/* Booking Type Info */}
-      {bookingType === 'pre_book' && scheduledDate && scheduledTime ? (
+      {bookingType === "pre_book" && scheduledDate && scheduledTime ? (
         <View style={styles.infoBanner}>
           <Calendar size={16} color={colors.primary} />
           <Text style={styles.infoText}>
-            Scheduled: {format(
-              scheduledDate instanceof Date ? scheduledDate : new Date(scheduledDate),
-              'EEE, MMM d'
-            )} at {scheduledTime}
+            Scheduled:{" "}
+            {format(
+              scheduledDate instanceof Date
+                ? scheduledDate
+                : new Date(scheduledDate),
+              "EEE, MMM d"
+            )}{" "}
+            at {scheduledTime}
           </Text>
           <Badge variant="outline">Pre-Booked</Badge>
         </View>
@@ -160,7 +183,8 @@ const DetailsStep = ({ beachData, isLoading }) => {
         <View style={styles.infoBanner}>
           <Clock size={16} color={colors.primary} />
           <Text style={styles.infoText}>
-            Service Hours: {beachData.serviceStartTime} - {beachData.serviceEndTime}
+            Service Hours: {beachData.serviceStartTime} -{" "}
+            {beachData.serviceEndTime}
           </Text>
         </View>
       )}
@@ -183,29 +207,37 @@ const DetailsStep = ({ beachData, isLoading }) => {
                     onPress={() => dispatch(toggleSize(s.value))}
                     activeOpacity={0.7}
                   >
-                    <Card style={[
-                      styles.sizeCard,
-                      isSelected && styles.sizeCardSelected,
-                    ]}>
+                    <Card
+                      style={[
+                        styles.sizeCard,
+                        isSelected && styles.sizeCardSelected,
+                      ]}
+                    >
                       <Checkbox
                         checked={isSelected}
                         onPress={() => dispatch(toggleSize(s.value))}
                       />
-                      <View style={[
-                        styles.sizeIndicator,
-                        s.value === 'small' && styles.sizeIndicatorSmall,
-                        s.value === 'medium' && styles.sizeIndicatorMedium,
-                        s.value === 'large' && styles.sizeIndicatorLarge,
-                      ]}>
-                        <View style={[
-                          styles.sizeDot,
-                          s.value === 'small' && styles.sizeDotSmall,
-                          s.value === 'medium' && styles.sizeDotMedium,
-                          s.value === 'large' && styles.sizeDotLarge,
-                        ]} />
+                      <View
+                        style={[
+                          styles.sizeIndicator,
+                          s.value === "small" && styles.sizeIndicatorSmall,
+                          s.value === "medium" && styles.sizeIndicatorMedium,
+                          s.value === "large" && styles.sizeIndicatorLarge,
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.sizeDot,
+                            s.value === "small" && styles.sizeDotSmall,
+                            s.value === "medium" && styles.sizeDotMedium,
+                            s.value === "large" && styles.sizeDotLarge,
+                          ]}
+                        />
                       </View>
                       <Text style={styles.sizeLabel}>{s.label}</Text>
-                      <Text style={styles.sizeAvailability}>{s.availableQuantity} Available</Text>
+                      <Text style={styles.sizeAvailability}>
+                        {s.availableQuantity} Available
+                      </Text>
                     </Card>
                   </TouchableOpacity>
                   {isSelected && (
@@ -213,22 +245,40 @@ const DetailsStep = ({ beachData, isLoading }) => {
                       <Text style={styles.quantityLabel}>Quantity</Text>
                       <View style={styles.quantityRow}>
                         <TouchableOpacity
-                          onPress={() => dispatch(setQuantity({
-                            size: s.value,
-                            quantity: Math.max(1, getSizeQuantity(s.value) - 1),
-                          }))}
+                          onPress={() =>
+                            dispatch(
+                              setQuantity({
+                                size: s.value,
+                                quantity: Math.max(
+                                  1,
+                                  getSizeQuantity(s.value) - 1
+                                ),
+                              })
+                            )
+                          }
                           disabled={getSizeQuantity(s.value) <= 1}
                           style={styles.quantityButton}
                         >
                           <Minus size={16} color={colors.primary} />
                         </TouchableOpacity>
-                        <Text style={styles.quantityValue}>{getSizeQuantity(s.value)}</Text>
+                        <Text style={styles.quantityValue}>
+                          {getSizeQuantity(s.value)}
+                        </Text>
                         <TouchableOpacity
-                          onPress={() => dispatch(setQuantity({
-                            size: s.value,
-                            quantity: Math.min(s.availableQuantity, getSizeQuantity(s.value) + 1),
-                          }))}
-                          disabled={getSizeQuantity(s.value) >= s.availableQuantity}
+                          onPress={() =>
+                            dispatch(
+                              setQuantity({
+                                size: s.value,
+                                quantity: Math.min(
+                                  s.availableQuantity,
+                                  getSizeQuantity(s.value) + 1
+                                ),
+                              })
+                            )
+                          }
+                          disabled={
+                            getSizeQuantity(s.value) >= s.availableQuantity
+                          }
                           style={styles.quantityButton}
                         >
                           <Plus size={16} color={colors.primary} />
@@ -263,11 +313,13 @@ const DetailsStep = ({ beachData, isLoading }) => {
                     durationHours === hours && styles.durationOptionSelected,
                   ]}
                 >
-                  <Text style={[
-                    styles.durationText,
-                    durationHours === hours && styles.durationTextSelected,
-                  ]}>
-                    {hours} hour{hours > 1 ? 's' : ''}
+                  <Text
+                    style={[
+                      styles.durationText,
+                      durationHours === hours && styles.durationTextSelected,
+                    ]}
+                  >
+                    {hours} hour{hours > 1 ? "s" : ""}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -282,23 +334,30 @@ const DetailsStep = ({ beachData, isLoading }) => {
                 <View style={styles.timingGrid}>
                   <View style={styles.timingItem}>
                     <Text style={styles.timingLabel}>
-                      {estimatedTimes.isPreBook ? 'Scheduled Delivery' : 'Est. Delivery'}
+                      {estimatedTimes.isPreBook
+                        ? "Scheduled Delivery"
+                        : "Est. Delivery"}
                     </Text>
                     <Text style={styles.timingValue}>
-                      {estimatedTimes.deliveryStart} - {estimatedTimes.deliveryEnd}
+                      {estimatedTimes.deliveryStart} -{" "}
+                      {estimatedTimes.deliveryEnd}
                     </Text>
                   </View>
                   <View style={styles.timingItem}>
                     <Text style={styles.timingLabel}>
-                      {estimatedTimes.isPreBook ? 'Scheduled End' : 'Est. Rental Ends'}
+                      {estimatedTimes.isPreBook
+                        ? "Scheduled End"
+                        : "Est. Rental Ends"}
                     </Text>
                     <Text style={styles.timingValue}>
-                      {estimatedTimes.rentalEndStart} - {estimatedTimes.rentalEndEnd}
+                      {estimatedTimes.rentalEndStart} -{" "}
+                      {estimatedTimes.rentalEndEnd}
                     </Text>
                   </View>
                 </View>
                 <Text style={styles.timingNote}>
-                  Your {durationHours} hour{durationHours > 1 ? 's' : ''} rental begins once delivered.
+                  Your {durationHours} hour{durationHours > 1 ? "s" : ""} rental
+                  begins once delivered.
                 </Text>
               </Card>
             )}
@@ -313,12 +372,16 @@ const DetailsStep = ({ beachData, isLoading }) => {
             <View style={styles.totalHeader}>
               <Receipt size={20} color={colors.primary} />
               <Text style={styles.totalLabel}>Estimated Total</Text>
-              <Badge>{durationHours} hour{durationHours > 1 ? 's' : ''}</Badge>
+              <Badge>
+                {durationHours} hour{durationHours > 1 ? "s" : ""}
+              </Badge>
             </View>
-            <Text style={styles.totalAmount}>AED {estimatedTotal.toFixed(2)}</Text>
+            <Text style={styles.totalAmount}>
+              AED {estimatedTotal.toFixed(2)}
+            </Text>
             <View style={styles.totalBreakdown}>
               {selectedSizes.map((sq) => {
-                const sizeInfo = sizes.find(s => s.value === sq.size);
+                const sizeInfo = sizes.find((s) => s.value === sq.size);
                 const itemRate = hourlyRate * (sizeInfo?.priceMultiplier || 1);
                 const itemTotal = itemRate * durationHours * sq.quantity;
                 return (
@@ -326,7 +389,9 @@ const DetailsStep = ({ beachData, isLoading }) => {
                     <Text style={styles.breakdownLabel}>
                       {sizeInfo?.label} × {sq.quantity}
                     </Text>
-                    <Text style={styles.breakdownValue}>AED {itemTotal.toFixed(2)}</Text>
+                    <Text style={styles.breakdownValue}>
+                      AED {itemTotal.toFixed(2)}
+                    </Text>
                   </View>
                 );
               })}
@@ -334,7 +399,7 @@ const DetailsStep = ({ beachData, isLoading }) => {
           </View>
         ) : (
           <View style={styles.totalEmpty}>
-            <Receipt size={48} color={colors.textMuted + '40'} />
+            <Receipt size={48} color={colors.textMuted + "40"} />
             <Text style={styles.totalEmptyText}>Select sizes to see total</Text>
           </View>
         )}
@@ -345,7 +410,7 @@ const DetailsStep = ({ beachData, isLoading }) => {
         onPress={() => dispatch(nextStep())}
         disabled={!canProceed}
         style={styles.continueButton}
-        icon={<ChevronRight size={20} color={colors.textWhite} />}
+        // icon={<ChevronRight size={20} color={colors.textWhite} />}
       />
     </ScrollView>
   );
@@ -369,8 +434,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   title: {
-    fontSize: fontSizes['2xl'],
-    fontWeight: '700',
+    fontSize: fontSizes["2xl"],
+    fontWeight: "700",
     color: colors.text,
     marginBottom: spacing.xs,
   },
@@ -379,11 +444,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   infoBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     padding: spacing.md,
-    backgroundColor: colors.primary + '10',
+    backgroundColor: colors.primary + "10",
     borderRadius: borderRadius.medium,
     marginBottom: spacing.md,
   },
@@ -397,45 +462,45 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: fontSizes.base,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.text,
     marginBottom: spacing.md,
   },
   sizesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.md,
   },
   sizeContainer: {
-    width: '48%',
+    width: "48%",
   },
   sizeCard: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: spacing.md,
     borderWidth: 2,
     borderColor: colors.border,
   },
   sizeCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: colors.primary + '05',
+    backgroundColor: colors.primary + "05",
   },
   sizeIndicator: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.primary + '20',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: colors.primary + "20",
+    alignItems: "center",
+    justifyContent: "center",
     marginVertical: spacing.sm,
   },
   sizeIndicatorSmall: {
-    backgroundColor: colors.primary + '20',
+    backgroundColor: colors.primary + "20",
   },
   sizeIndicatorMedium: {
-    backgroundColor: colors.primary + '40',
+    backgroundColor: colors.primary + "40",
   },
   sizeIndicatorLarge: {
-    backgroundColor: colors.primary + '60',
+    backgroundColor: colors.primary + "60",
   },
   sizeDot: {
     borderRadius: 999,
@@ -455,9 +520,9 @@ const styles = StyleSheet.create({
   },
   sizeLabel: {
     fontSize: fontSizes.sm,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
-    textTransform: 'capitalize',
+    textTransform: "capitalize",
     marginBottom: spacing.xs / 2,
   },
   sizeAvailability: {
@@ -466,17 +531,17 @@ const styles = StyleSheet.create({
   },
   quantityControls: {
     marginTop: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
   quantityLabel: {
     fontSize: fontSizes.sm,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.text,
     marginBottom: spacing.xs,
   },
   quantityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
   },
   quantityButton: {
@@ -485,15 +550,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   quantityValue: {
-    fontSize: fontSizes['2xl'],
-    fontWeight: '700',
+    fontSize: fontSizes["2xl"],
+    fontWeight: "700",
     color: colors.text,
     minWidth: 48,
-    textAlign: 'center',
+    textAlign: "center",
   },
   durationContainer: {
     gap: spacing.md,
@@ -517,36 +582,36 @@ const styles = StyleSheet.create({
   },
   durationTextSelected: {
     color: colors.textWhite,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   timingCard: {
     marginTop: spacing.md,
-    backgroundColor: colors.primary + '05',
-    borderColor: colors.primary + '30',
+    backgroundColor: colors.primary + "05",
+    borderColor: colors.primary + "30",
   },
   timingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
   timingTitle: {
     fontSize: fontSizes.sm,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   timingGrid: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
   timingItem: {
     flex: 1,
     padding: spacing.sm,
-    backgroundColor: colors.background + '99',
+    backgroundColor: colors.background + "99",
     borderRadius: borderRadius.medium,
     borderWidth: 1,
-    borderColor: colors.border + '80',
+    borderColor: colors.border + "80",
   },
   timingLabel: {
     fontSize: fontSizes.xs,
@@ -555,7 +620,7 @@ const styles = StyleSheet.create({
   },
   timingValue: {
     fontSize: fontSizes.sm,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.primary,
   },
   timingNote: {
@@ -563,16 +628,16 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   totalCard: {
-    backgroundColor: colors.primary + '10',
-    borderColor: colors.primary + '30',
+    backgroundColor: colors.primary + "10",
+    borderColor: colors.primary + "30",
     marginBottom: spacing.md,
   },
   totalContent: {
     padding: spacing.lg,
   },
   totalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
@@ -582,35 +647,35 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   totalAmount: {
-    fontSize: fontSizes['3xl'],
-    fontWeight: '700',
+    fontSize: fontSizes["3xl"],
+    fontWeight: "700",
     color: colors.primary,
     marginBottom: spacing.md,
   },
   totalBreakdown: {
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.primary + '30',
+    borderTopColor: colors.primary + "30",
     gap: spacing.sm,
   },
   breakdownItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   breakdownLabel: {
     fontSize: fontSizes.sm,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.text,
   },
   breakdownValue: {
     fontSize: fontSizes.sm,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   totalEmpty: {
     padding: spacing.xl,
-    alignItems: 'center',
+    alignItems: "center",
   },
   totalEmptyText: {
     fontSize: fontSizes.sm,
@@ -619,8 +684,8 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     padding: spacing.xl,
-    alignItems: 'center',
-    borderStyle: 'dashed',
+    alignItems: "center",
+    borderStyle: "dashed",
   },
   emptyText: {
     fontSize: fontSizes.sm,
@@ -636,4 +701,3 @@ const styles = StyleSheet.create({
 });
 
 export default DetailsStep;
-
