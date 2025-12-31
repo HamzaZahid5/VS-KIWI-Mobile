@@ -14,7 +14,8 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kiwi.app"
+      "bundleIdentifier": "com.kiwi.app",
+      "icon": "./assets/iosIcon.png"
     },
     "android": {
       "package": "com.kiwi.app",

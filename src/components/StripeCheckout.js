@@ -4,7 +4,14 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Alert, Platform } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Platform,
+} from "react-native";
 import { useStripe, usePaymentSheet } from "@stripe/stripe-react-native";
 import * as Linking from "expo-linking";
 import Constants from "expo-constants";
@@ -47,10 +54,19 @@ const getStripePublicKey = () => {
 };
 
 // Get URL scheme for Stripe redirects
-const getUrlScheme = () => {
+const _getUrlScheme = () => {
   if (Constants.appOwnership === "expo") {
     return Linking.createURL("/--/");
   }
+  return Linking.createURL("");
+};
+const getUrlScheme = () => {
+  if (Platform.OS === "ios") {
+    // Use your custom URL scheme for iOS
+    return "kiwi://stripe-redirect";
+  }
+
+  // For Android / Expo Go, Linking.createURL is fine
   return Linking.createURL("");
 };
 
@@ -78,55 +94,64 @@ const StripeCheckout = ({
     loading: paymentSheetLoading,
   } = usePaymentSheet();
 
-  const initializePaymentSheet = React.useCallback(async (secret) => {
-    if (!stripe || initializationRef.current) {
-      return; // Already initializing or initialized
-    }
-
-    initializationRef.current = true;
-
-    try {
-      // Add a small delay for Android to avoid onSaveInstanceState error
-      if (Platform.OS === "android") {
-        await new Promise((resolve) => setTimeout(resolve, 300));
+  const initializePaymentSheet = React.useCallback(
+    async (secret) => {
+      if (!stripe || initializationRef.current) {
+        return; // Already initializing or initialized
       }
 
-      const returnURL = getUrlScheme();
-      const { error: initError } = await initPaymentSheet({
-        paymentIntentClientSecret: secret,
-        merchantDisplayName: "Kiwi Rentals",
-        allowsDelayedPaymentMethods: true,
-        returnURL: returnURL,
-        applePay: {
-          merchantCountryCode: "AE",
-        },
-        googlePay: {
-          merchantCountryCode: "AE",
-          testEnv: STRIPE_PUBLIC_KEY?.startsWith("pk_test_") || false,
-        },
-      });
+      initializationRef.current = true;
 
-      if (initError) {
-        console.error("Payment sheet initialization error:", initError);
+      try {
+        // Add a small delay for Android to avoid onSaveInstanceState error
+        if (Platform.OS === "android") {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+
+        const returnURL = getUrlScheme();
+        console.log("returnURreturnURLL", returnURL);
+
+        const { error: initError } = await initPaymentSheet({
+          paymentIntentClientSecret: secret,
+          merchantDisplayName: "Kiwi Rentals",
+          allowsDelayedPaymentMethods: true,
+          returnURL: returnURL,
+          applePay: {
+            merchantCountryCode: "AE",
+          },
+          googlePay: {
+            merchantCountryCode: "AE",
+            testEnv: STRIPE_PUBLIC_KEY?.startsWith("pk_test_") || false,
+          },
+        });
+        console.log(error);
+
+        if (initError) {
+          console.error("Payment sheet initialization error:", initError);
+          // Don't set error for onSaveInstanceState - it's a timing issue
+          if (
+            initError.message &&
+            !initError.message.includes("onSaveInstanceState")
+          ) {
+            setError(initError.message || "Failed to initialize payment sheet");
+          }
+          initializationRef.current = false;
+        } else {
+          setIsInitialized(true);
+          console.log("Payment sheet initialized successfully");
+        }
+      } catch (err) {
+        console.error("Payment sheet initialization error:", err);
         // Don't set error for onSaveInstanceState - it's a timing issue
-        if (initError.message && !initError.message.includes("onSaveInstanceState")) {
-          setError(initError.message || "Failed to initialize payment sheet");
+        if (err.message && !err.message.includes("onSaveInstanceState")) {
+          setError(err.message || "Failed to initialize payment sheet");
         }
         initializationRef.current = false;
-      } else {
-        setIsInitialized(true);
-        console.log("Payment sheet initialized successfully");
       }
-    } catch (err) {
-      console.error("Payment sheet initialization error:", err);
-      // Don't set error for onSaveInstanceState - it's a timing issue
-      if (err.message && !err.message.includes("onSaveInstanceState")) {
-        setError(err.message || "Failed to initialize payment sheet");
-      }
-      initializationRef.current = false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stripe]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [stripe]
+  );
 
   useEffect(() => {
     if (!stripe || initializationRef.current) {
@@ -152,6 +177,8 @@ const StripeCheckout = ({
         });
         const data = response?.data;
         if (data?.data?.clientSecret) {
+          console.log("data.data.clientSecret", data.data.clientSecret);
+
           setClientSecret(data.data.clientSecret);
           setLoading(false);
           // Delay initialization slightly to ensure component is fully mounted

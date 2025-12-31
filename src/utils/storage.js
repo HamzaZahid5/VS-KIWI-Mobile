@@ -18,6 +18,16 @@ export const storeData = async (key, value) => {
     await AsyncStorage.setItem(key, jsonValue);
     return true;
   } catch (error) {
+    // Suppress iOS folder creation errors - they're non-critical
+    // The folder will be created automatically on next write
+    if (error?.message?.includes("doesn't exist") || 
+        error?.code === 4 || 
+        error?.domain === 'NSCocoaErrorDomain') {
+      // This is a known iOS issue where the storage directory doesn't exist yet
+      // It will be created automatically, so we can safely ignore this error
+      console.warn('Storage directory not ready, will retry on next write:', key);
+      return false;
+    }
     console.error('Error storing data:', error);
     return false;
   }

@@ -30,7 +30,7 @@ import Skeleton from "../../components/Skeleton";
 import GoogleAutocomplete from "../../components/GoogleAutocomplete";
 import { GOOGLE_MAPS_API_KEY } from "../../utils/constants";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const LocationStep = ({ beaches, isLoading }) => {
   const dispatch = useDispatch();
@@ -133,6 +133,7 @@ const LocationStep = ({ beaches, isLoading }) => {
   if (isLoading) {
     return <LocationStepSkeleton />;
   }
+  console.log("filteredBeaches", filteredBeaches);
 
   return (
     <View style={styles.container}>
@@ -280,7 +281,7 @@ function LocationStepSkeleton() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between', // Push button to bottom
+    justifyContent: "space-between", // Push button to bottom
   },
   contentWrapper: {
     flex: 1,

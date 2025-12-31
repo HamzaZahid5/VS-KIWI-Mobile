@@ -11,10 +11,60 @@ import bookingReducer from './bookingSlice';
 import bookingFlowReducer from './bookingFlowSlice';
 import authReducer from './authSlice';
 
+// Create a storage adapter that handles iOS folder creation errors
+const createStorage = () => {
+  return {
+    getItem: async (key) => {
+      try {
+        return await AsyncStorage.getItem(key);
+      } catch (error) {
+        // Suppress iOS folder creation errors
+        if (error?.message?.includes("doesn't exist") || error?.code === 4) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    setItem: async (key, value) => {
+      try {
+        await AsyncStorage.setItem(key, value);
+      } catch (error) {
+        // Suppress iOS folder creation errors - folder will be created automatically
+        if (error?.message?.includes("doesn't exist") || 
+            error?.code === 4 || 
+            error?.domain === 'NSCocoaErrorDomain') {
+          // Retry once after a short delay to allow folder creation
+          await new Promise(resolve => setTimeout(resolve, 50));
+          try {
+            await AsyncStorage.setItem(key, value);
+          } catch (retryError) {
+            // If retry also fails, silently fail (non-critical for redux-persist)
+            // The data will be saved on next state change
+            return;
+          }
+        } else {
+          throw error;
+        }
+      }
+    },
+    removeItem: async (key) => {
+      try {
+        await AsyncStorage.removeItem(key);
+      } catch (error) {
+        // Suppress iOS folder errors
+        if (error?.message?.includes("doesn't exist") || error?.code === 4) {
+          return;
+        }
+        throw error;
+      }
+    },
+  };
+};
+
 // Redux-persist configuration
 const persistConfig = {
   key: 'root',
-  storage: AsyncStorage,
+  storage: createStorage(),
   // Persist booking, bookingFlow and auth data
   whitelist: ['booking', 'bookingFlow', 'auth'],
   // Transform to exclude non-serializable data
