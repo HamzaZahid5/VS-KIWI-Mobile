@@ -15,7 +15,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kiwi.app",
-      "icon": "./assets/iosIcon.png"
+      "icon": "./assets/iosIcon.png",
+      "config": {
+        "googleMapsApiKey": "process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY"
+      }
     },
     "android": {
       "package": "com.kiwi.app",
@@ -31,6 +34,12 @@
         {
           "merchantIdentifier": [],
           "enableGooglePay": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Kiwi to use your location to find nearby beaches."
         }
       ]
     ],

@@ -14,6 +14,7 @@ import {
   RefreshControl,
   Dimensions,
   FlatList,
+  StatusBar,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -179,10 +180,10 @@ const HomeScreen = ({ navigation }) => {
   if (ordersLoading && !activeOrdersData) {
     return <LoadingSkeleton />;
   }
-  console.log("\n\nupcomingBookings", upcomingBookings);
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor={"red"} barStyle={"dark-content"} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -193,21 +194,24 @@ const HomeScreen = ({ navigation }) => {
       >
         {/* Header Section */}
         <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text style={styles.welcomeTitle}>
-              Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
-            </Text>
-            <Text style={styles.welcomeSubtitle}>
-              Ready for another relaxing beach day?
-            </Text>
-          </View>
-          <Button
-            title="New Booking"
-            onPress={handleNewBooking}
-            icon={<Plus size={20} color={colors.primaryForeground} />}
-            style={styles.newBookingButton}
-          />
+          {/* <View
+            style={[
+              styles.headerText,
+              { flexDirection: "row", alignItems: "center" },
+            ]}
+          > */}
+          <Text style={styles.welcomeTitle}>Kiwi</Text>
+          <Text style={styles.welcomeSubtitle}>
+            Hi{user?.firstName ? `, ${user.firstName}` : ""} 👋!
+          </Text>
         </View>
+        {/* </View> */}
+        <Button
+          title="New Booking"
+          onPress={handleNewBooking}
+          icon={<Plus size={20} color={colors.primaryForeground} />}
+          style={styles.newBookingButton}
+        />
 
         {/* Stats Cards Section */}
         <View style={styles.statsSection}>
@@ -360,6 +364,8 @@ const HomeScreen = ({ navigation }) => {
                   keyExtractor={(item) => item.id}
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.verticalScrollContent}
+                  scrollEnabled={false}
+                  nestedScrollEnabled={true}
                   renderItem={({ item: order }) => (
                     <BookingCard
                       order={order}
@@ -391,6 +397,8 @@ const HomeScreen = ({ navigation }) => {
                   keyExtractor={(item) => item.id}
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.verticalScrollContent}
+                  scrollEnabled={false}
+                  nestedScrollEnabled={true}
                   renderItem={({ item: booking }) => (
                     <UpcomingBookingCard
                       booking={booking}
@@ -450,29 +458,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
     paddingBottom: spacing.xxl,
   },
   header: {
     marginBottom: spacing.xl,
-    gap: spacing.md,
+    backgroundColor: colors.primaryMuted,
+    marginHorizontal: -16,
+    paddingHorizontal: 15,
+    alignItems: "center",
+    borderColor: colors.primary,
+    borderWidth: 1,
+    flexDirection: "row",
+    paddingVertical: 10,
   },
-  headerText: {
-    marginBottom: spacing.xs,
-  },
+  headerText: {},
   welcomeTitle: {
     fontSize: isTablet ? fontSizes.displaySmall : fontSizes.h1,
     fontWeight: "700",
     color: colors.foreground,
-    marginBottom: spacing.xs,
+    width: "38%",
   },
   welcomeSubtitle: {
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.h4,
     color: colors.mutedForeground,
+    textAlign: "center",
+    fontWeight: "700",
+    textTransform: "capitalize",
   },
   newBookingButton: {
     alignSelf: isTablet ? "flex-start" : "stretch",
-    marginTop: spacing.sm,
+    marginBottom: 20,
   },
   statsSection: {
     marginBottom: spacing.xl,

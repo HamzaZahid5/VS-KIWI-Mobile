@@ -49,6 +49,12 @@
         </dict>
       </dict>
     </dict>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Allow Kiwi to use your location to find nearby beaches.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your location</string>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>
@@ -73,7 +79,9 @@
     </array>
     <key>UIUserInterfaceStyle</key>
     <string>Light</string>
-    <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
-  </dict>
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <false/>
+  <key>GMSApiKey</key>
+  <string>AIzaSyDz4Xap1p0E2w0nZ7u2sBEsDgrjGNycK04</string>
+</dict>
 </plist>

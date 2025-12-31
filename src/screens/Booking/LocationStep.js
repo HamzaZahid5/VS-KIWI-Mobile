@@ -3,7 +3,7 @@
  * Select beach location for booking
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -27,7 +27,8 @@ import Input from "../../components/Input";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import Skeleton from "../../components/Skeleton";
-import GoogleAutocomplete from "../../components/GoogleAutocomplete";
+import Map from "../../components/Map";
+import { isPointInPolygon } from "../../utils/geo";
 import { GOOGLE_MAPS_API_KEY } from "../../utils/constants";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -39,6 +40,7 @@ const LocationStep = ({ beaches, isLoading }) => {
   const [locationError, setLocationError] = useState(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [isInPolygon, setIsInPolygon] = useState(false);
 
   const activeBeaches = beaches.filter((b) => b.isActive);
 
@@ -81,59 +83,83 @@ const LocationStep = ({ beaches, isLoading }) => {
 
   const handleBeachSelect = (beach) => {
     dispatch(setBeachId(beach.id));
-    dispatch(
-      setLocation({
-        latitude: parseFloat(beach.latitude) || 0,
-        longitude: parseFloat(beach.longitude) || 0,
-      })
-    );
+    const lat = parseFloat(beach.latitude) || 0;
+    const lng = parseFloat(beach.longitude) || 0;
+
+    dispatch(setLocation({ latitude: lat, longitude: lng }));
     setSelectedPlace(beach);
     setSearchQuery(beach.name);
-  };
+    setLocationError(null);
 
-  const handlePlaceSelect = (place) => {
-    if (!place || !place.geometry) return;
-
-    const lat = place.geometry.location.lat;
-    const lng = place.geometry.location.lng;
-
-    // Try to find a matching beach based on location
-    const matchedBeach = beaches.find((beach) => {
-      const beachLat = parseFloat(beach.latitude);
-      const beachLng = parseFloat(beach.longitude);
-
-      // Check if the selected place is within 1km of the beach (approximate)
-      const distance = Math.sqrt(
-        Math.pow(lat - beachLat, 2) + Math.pow(lng - beachLng, 2)
-      );
-      // 1 degree ≈ 111km, so 0.009 ≈ 1km
-      return distance < 0.009;
-    });
-
-    if (matchedBeach) {
-      dispatch(setBeachId(matchedBeach.id));
-      dispatch(setLocation({ latitude: lat, longitude: lng }));
-      setSelectedPlace(matchedBeach);
-      setSearchQuery(matchedBeach.name);
+    // Check if beach center is within its own polygon (should always be true, but validate)
+    if (beach.polygonBoundary && Array.isArray(beach.polygonBoundary)) {
+      const inPolygon = isPointInPolygon(lat, lng, beach.polygonBoundary);
+      setIsInPolygon(inPolygon);
     } else {
-      // If no beach matches, just set the location
-      dispatch(setLocation({ latitude: lat, longitude: lng }));
-      setSearchQuery(place.name || place.formatted_address);
-      setLocationError(
-        "Selected location doesn't match any beach. Please select a beach from the list below."
-      );
+      // If no polygon, allow selection (for beaches without boundaries)
+      setIsInPolygon(true);
     }
   };
+
+  // Handle location selection from map
+  const handleMapLocationSelect = (lat, lng, inPolygon, beachId) => {
+    if (!inPolygon) {
+      setLocationError(
+        "Please select a location within the beach's service area (green polygon)."
+      );
+      setIsInPolygon(false);
+      return;
+    }
+
+    dispatch(setLocation({ latitude: lat, longitude: lng }));
+    setIsInPolygon(true);
+    setLocationError(null);
+  };
+
+  // Get selected beach data
+  const selectedBeach =
+    beaches.find((b) => b.id === bookingData.beachId) || null;
+
+  // Validate that location is within polygon if beach has polygon
+  useEffect(() => {
+    if (
+      selectedBeach &&
+      bookingData.latitude !== 0 &&
+      bookingData.longitude !== 0
+    ) {
+      if (
+        selectedBeach.polygonBoundary &&
+        Array.isArray(selectedBeach.polygonBoundary)
+      ) {
+        const inPolygon = isPointInPolygon(
+          bookingData.latitude,
+          bookingData.longitude,
+          selectedBeach.polygonBoundary
+        );
+        setIsInPolygon(inPolygon);
+        if (!inPolygon) {
+          setLocationError(
+            "Selected location is outside the beach's service area. Please select a point within the green polygon."
+          );
+        }
+      } else {
+        // Beach has no polygon, allow any location
+        setIsInPolygon(true);
+      }
+    } else {
+      setIsInPolygon(false);
+    }
+  }, [selectedBeach, bookingData.latitude, bookingData.longitude]);
 
   const canProceed =
     bookingData.beachId &&
     bookingData.latitude !== 0 &&
-    bookingData.longitude !== 0;
+    bookingData.longitude !== 0 &&
+    isInPolygon;
 
   if (isLoading) {
     return <LocationStepSkeleton />;
   }
-  console.log("filteredBeaches", filteredBeaches);
 
   return (
     <View style={styles.container}>
@@ -146,22 +172,13 @@ const LocationStep = ({ beaches, isLoading }) => {
         </View>
 
         <View style={styles.searchContainer}>
-          {GOOGLE_MAPS_API_KEY ? (
-            <GoogleAutocomplete
-              placeholder="Search beaches or locations..."
-              apiKey={GOOGLE_MAPS_API_KEY}
-              onPlaceSelect={handlePlaceSelect}
-              containerStyle={styles.searchInput}
-            />
-          ) : (
-            <Input
-              placeholder="Search beaches..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              icon={Search}
-              containerStyle={styles.searchInput}
-            />
-          )}
+          <Input
+            placeholder="Search beaches..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            icon={Search}
+            containerStyle={styles.searchInput}
+          />
           <TouchableOpacity
             onPress={handleGetCurrentLocation}
             disabled={isGettingLocation}
@@ -182,6 +199,33 @@ const LocationStep = ({ beaches, isLoading }) => {
           <View style={styles.errorContainer}>
             <AlertCircle size={16} color={colors.error} />
             <Text style={styles.errorText}>{locationError}</Text>
+          </View>
+        )}
+
+        {/* Map Section - Show when beach is selected */}
+        {selectedBeach && GOOGLE_MAPS_API_KEY && (
+          <View style={styles.mapContainer}>
+            <Map
+              beaches={beaches}
+              selectedBeach={selectedBeach}
+              userLocation={
+                bookingData.latitude !== 0 && bookingData.longitude !== 0
+                  ? {
+                      latitude: bookingData.latitude,
+                      longitude: bookingData.longitude,
+                    }
+                  : null
+              }
+              onLocationSelect={handleMapLocationSelect}
+            />
+            {selectedBeach.polygonBoundary && (
+              <View style={styles.mapHint}>
+                <Text style={styles.mapHintText}>
+                  📍 Tap on the map within the green area to select your
+                  delivery location
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -255,6 +299,13 @@ const LocationStep = ({ beaches, isLoading }) => {
       </View>
 
       <View style={styles.buttonContainer}>
+        <Button
+          title="Undo"
+          onPress={() => dispatch(nextStep())}
+          disabled={!canProceed}
+          style={styles.cancelButton}
+          textStyle={styles.cancelText}
+        />
         <Button
           title="Continue"
           onPress={() => dispatch(nextStep())}
@@ -333,6 +384,28 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
     color: colors.error,
   },
+  mapContainer: {
+    height: 300,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.medium,
+    overflow: "hidden",
+    ...shadows.small,
+  },
+  mapHint: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.background + "E6",
+    padding: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  mapHintText: {
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    textAlign: "center",
+  },
   beachList: {
     flex: 1,
   },
@@ -402,16 +475,25 @@ const styles = StyleSheet.create({
     color: colors.textWhite,
   },
   buttonContainer: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
     backgroundColor: colors.background,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+
     ...shadows.lg,
   },
   continueButton: {
-    width: "100%",
+    width: "70%",
+  },
+  cancelButton: {
+    width: "25%",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   emptyContainer: {
     padding: spacing.xl,
@@ -423,6 +505,9 @@ const styles = StyleSheet.create({
   },
   skeleton: {
     marginBottom: spacing.md,
+  },
+  cancelText: {
+    color: colors.primary,
   },
 });
 
