@@ -32,6 +32,7 @@ export const colors = {
   textWhite: "#FFFFFF",
   mutedForeground: "hsl(210, 25%, 7.8431%)", // Light mode muted
   mutedForegroundDark: "hsl(210, 3.3898%, 46.2745%)", // Dark mode muted
+  textMuted: "#7F8C8D",
 
   // Muted colors
   muted: "hsl(240, 1.9608%, 90%)", // Light mode

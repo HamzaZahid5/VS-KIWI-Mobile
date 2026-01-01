@@ -16,6 +16,7 @@ import { store, persistor } from "./src/redux/store";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { colors } from "./src/theme";
 import { STRIPE_PUBLIC_KEY } from "./src/utils/constants";
+import { initializeLocationPermission } from "./src/utils/locationPermission";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -30,6 +31,10 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
+        // Initialize location permission (checks if granted, requests if needed)
+        // This runs silently - won't show popup if already granted
+        await initializeLocationPermission();
+
         // Wait exactly 3 seconds before hiding splash screen
         await new Promise((resolve) => setTimeout(resolve, 3000));
 

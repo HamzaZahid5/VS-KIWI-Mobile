@@ -183,7 +183,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={"red"} barStyle={"dark-content"} />
+      <StatusBar barStyle={"dark-content"} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -194,18 +194,11 @@ const HomeScreen = ({ navigation }) => {
       >
         {/* Header Section */}
         <View style={styles.header}>
-          {/* <View
-            style={[
-              styles.headerText,
-              { flexDirection: "row", alignItems: "center" },
-            ]}
-          > */}
           <Text style={styles.welcomeTitle}>Kiwi</Text>
           <Text style={styles.welcomeSubtitle}>
             Hi{user?.firstName ? `, ${user.firstName}` : ""} 👋!
           </Text>
         </View>
-        {/* </View> */}
         <Button
           title="New Booking"
           onPress={handleNewBooking}
@@ -478,6 +471,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.foreground,
     width: "38%",
+    paddingLeft: 5,
   },
   welcomeSubtitle: {
     fontSize: fontSizes.h4,

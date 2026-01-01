@@ -22,7 +22,7 @@ import {
   ChevronRight,
 } from "lucide-react-native";
 import { format, addMinutes } from "date-fns";
-import { colors, spacing, fontSizes, borderRadius } from "../../theme";
+import { colors, spacing, fontSizes, borderRadius, shadows } from "../../theme";
 import {
   selectBookingData,
   selectHourlyRate,
@@ -203,89 +203,127 @@ const DetailsStep = ({ beachData, isLoading }) => {
               const isSelected = isSizeSelected(s.value);
               return (
                 <View key={s.value} style={styles.sizeContainer}>
-                  <TouchableOpacity
-                    onPress={() => dispatch(toggleSize(s.value))}
-                    activeOpacity={0.7}
+                  <Card
+                    style={[
+                      styles.sizeCard,
+                      isSelected && styles.sizeCardSelected,
+                    ]}
                   >
-                    <Card
-                      style={[
-                        styles.sizeCard,
-                        isSelected && styles.sizeCardSelected,
-                      ]}
-                    >
-                      <Checkbox
-                        checked={isSelected}
+                    <View style={styles.sizeCardContent}>
+                      <TouchableOpacity
                         onPress={() => dispatch(toggleSize(s.value))}
-                      />
-                      <View
-                        style={[
-                          styles.sizeIndicator,
-                          s.value === "small" && styles.sizeIndicatorSmall,
-                          s.value === "medium" && styles.sizeIndicatorMedium,
-                          s.value === "large" && styles.sizeIndicatorLarge,
-                        ]}
+                        activeOpacity={0.7}
+                        style={styles.sizeCardLeft}
                       >
+                        <Checkbox
+                          checked={isSelected}
+                          onPress={() => dispatch(toggleSize(s.value))}
+                        />
                         <View
                           style={[
-                            styles.sizeDot,
-                            s.value === "small" && styles.sizeDotSmall,
-                            s.value === "medium" && styles.sizeDotMedium,
-                            s.value === "large" && styles.sizeDotLarge,
+                            styles.sizeIndicator,
+                            s.value === "small" && styles.sizeIndicatorSmall,
+                            s.value === "medium" && styles.sizeIndicatorMedium,
+                            s.value === "large" && styles.sizeIndicatorLarge,
                           ]}
-                        />
-                      </View>
-                      <Text style={styles.sizeLabel}>{s.label}</Text>
-                      <Text style={styles.sizeAvailability}>
-                        {s.availableQuantity} Available
-                      </Text>
-                    </Card>
-                  </TouchableOpacity>
-                  {isSelected && (
-                    <View style={styles.quantityControls}>
-                      <Text style={styles.quantityLabel}>Quantity</Text>
-                      <View style={styles.quantityRow}>
-                        <TouchableOpacity
-                          onPress={() =>
-                            dispatch(
-                              setQuantity({
-                                size: s.value,
-                                quantity: Math.max(
-                                  1,
-                                  getSizeQuantity(s.value) - 1
-                                ),
-                              })
-                            )
-                          }
-                          disabled={getSizeQuantity(s.value) <= 1}
-                          style={styles.quantityButton}
                         >
-                          <Minus size={16} color={colors.primary} />
-                        </TouchableOpacity>
-                        <Text style={styles.quantityValue}>
-                          {getSizeQuantity(s.value)}
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() =>
-                            dispatch(
-                              setQuantity({
-                                size: s.value,
-                                quantity: Math.min(
-                                  s.availableQuantity,
-                                  getSizeQuantity(s.value) + 1
-                                ),
-                              })
-                            )
-                          }
-                          disabled={
-                            getSizeQuantity(s.value) >= s.availableQuantity
-                          }
-                          style={styles.quantityButton}
-                        >
-                          <Plus size={16} color={colors.primary} />
-                        </TouchableOpacity>
-                      </View>
+                          <View
+                            style={[
+                              styles.sizeDot,
+                              s.value === "small" && styles.sizeDotSmall,
+                              s.value === "medium" && styles.sizeDotMedium,
+                              s.value === "large" && styles.sizeDotLarge,
+                            ]}
+                          />
+                        </View>
+                        <View style={styles.sizeInfo}>
+                          <Text
+                            style={styles.sizeLabel}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
+                            {s.label}
+                          </Text>
+                          <Text
+                            style={styles.sizeAvailability}
+                            numberOfLines={1}
+                          >
+                            {s.availableQuantity} Available
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                      {isSelected && (
+                        <View style={styles.quantityControls}>
+                          <Text style={styles.quantityLabel}>Quantity</Text>
+                          <View style={styles.quantityRow}>
+                            <TouchableOpacity
+                              onPress={() =>
+                                dispatch(
+                                  setQuantity({
+                                    size: s.value,
+                                    quantity: Math.max(
+                                      1,
+                                      getSizeQuantity(s.value) - 1
+                                    ),
+                                  })
+                                )
+                              }
+                              disabled={getSizeQuantity(s.value) <= 1}
+                              style={[
+                                styles.quantityButton,
+                                getSizeQuantity(s.value) <= 1 &&
+                                  styles.quantityButtonDisabled,
+                              ]}
+                            >
+                              <Minus
+                                size={16}
+                                color={
+                                  getSizeQuantity(s.value) <= 1
+                                    ? colors.textMuted
+                                    : colors.primary
+                                }
+                              />
+                            </TouchableOpacity>
+                            <Text style={styles.quantityValue}>
+                              {getSizeQuantity(s.value)}
+                            </Text>
+                            <TouchableOpacity
+                              onPress={() =>
+                                dispatch(
+                                  setQuantity({
+                                    size: s.value,
+                                    quantity: Math.min(
+                                      s.availableQuantity,
+                                      getSizeQuantity(s.value) + 1
+                                    ),
+                                  })
+                                )
+                              }
+                              disabled={
+                                getSizeQuantity(s.value) >= s.availableQuantity
+                              }
+                              style={[
+                                styles.quantityButton,
+                                getSizeQuantity(s.value) >=
+                                  s.availableQuantity &&
+                                  styles.quantityButtonDisabled,
+                              ]}
+                            >
+                              <Plus
+                                size={16}
+                                color={
+                                  getSizeQuantity(s.value) >=
+                                  s.availableQuantity
+                                    ? colors.textMuted
+                                    : colors.primary
+                                }
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
                     </View>
-                  )}
+                  </Card>
                 </View>
               );
             })}
@@ -467,31 +505,47 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   sizesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
     gap: spacing.md,
   },
   sizeContainer: {
-    width: "48%",
+    width: "100%",
   },
   sizeCard: {
-    alignItems: "center",
-    padding: spacing.md,
     borderWidth: 2,
     borderColor: colors.border,
+    borderRadius: borderRadius.large,
+    backgroundColor: colors.background,
+    overflow: "hidden",
+    ...shadows.small,
   },
   sizeCardSelected: {
     borderColor: colors.primary,
     backgroundColor: colors.primary + "05",
+    ...shadows.medium,
+  },
+  sizeCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: spacing.lg,
+    gap: spacing.sm,
+    justifyContent: "space-between",
+    minHeight: 80,
+  },
+  sizeCardLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    flex: 1,
+    minWidth: 0, // Allows flex to shrink properly
   },
   sizeIndicator: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary + "20",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: colors.primary + "15",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: spacing.sm,
+    flexShrink: 0,
   },
   sizeIndicatorSmall: {
     backgroundColor: colors.primary + "20",
@@ -518,46 +572,68 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
   },
+  sizeInfo: {
+    flex: 1,
+    marginLeft: spacing.xs,
+    minWidth: 0, // Allows text to wrap/truncate properly
+  },
   sizeLabel: {
-    fontSize: fontSizes.sm,
-    fontWeight: "600",
+    fontSize: fontSizes.base,
+    fontWeight: "700",
     color: colors.text,
     textTransform: "capitalize",
     marginBottom: spacing.xs / 2,
+    numberOfLines: 1,
+    ellipsizeMode: "tail",
   },
   sizeAvailability: {
     fontSize: fontSizes.xs,
     color: colors.textMuted,
+    fontWeight: "500",
+    numberOfLines: 1,
   },
   quantityControls: {
-    marginTop: spacing.sm,
-    alignItems: "center",
+    alignItems: "flex-end",
+    marginLeft: spacing.sm,
+    paddingLeft: spacing.sm,
+    borderLeftWidth: 1,
+    borderLeftColor: colors.border + "40",
+    flexShrink: 0, // Prevents quantity controls from shrinking
+    minWidth: 100, // Ensures quantity controls have enough space
   },
   quantityLabel: {
-    fontSize: fontSizes.sm,
-    fontWeight: "500",
-    color: colors.text,
-    marginBottom: spacing.xs,
+    fontSize: fontSizes.xs,
+    fontWeight: "600",
+    color: colors.textMuted,
+    marginBottom: spacing.xs + 5,
+    paddingRight: 35,
   },
   quantityRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.xs,
+    justifyContent: "center",
   },
   quantityButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
+  quantityButtonDisabled: {
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    opacity: 0.5,
+  },
   quantityValue: {
-    fontSize: fontSizes["2xl"],
+    fontSize: fontSizes.xl,
     fontWeight: "700",
-    color: colors.text,
-    minWidth: 48,
+    color: colors.primary,
+    minWidth: 40,
     textAlign: "center",
   },
   durationContainer: {

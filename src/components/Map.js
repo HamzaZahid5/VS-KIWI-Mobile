@@ -4,15 +4,13 @@
  */
 
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, Dimensions, Alert } from "react-native";
+import { View, StyleSheet, Dimensions, Alert, Platform } from "react-native";
 import MapView, { Polygon, Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import { Platform } from "react-native";
 import { isPointInPolygon } from "../utils/geo";
 import { colors } from "../theme";
-// import { GOOGLE_MAPS_API_KEY } from "../utils/constants";
+import { GOOGLE_MAPS_API_KEY } from "../utils/constants";
 
 const { width, height } = Dimensions.get("window");
-const GOOGLE_MAPS_API_KEY = "AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ";
 const Map = ({
   beaches = [],
   selectedBeach = null,
@@ -81,6 +79,7 @@ const Map = ({
     }
 
     const { latitude, longitude } = event.nativeEvent.coordinate;
+    console.log("==\n\n\n=========", latitude, longitude);
 
     // Check if point is within polygon
     const isInPolygon = selectedPolygon
@@ -130,11 +129,20 @@ const Map = ({
     ? getPolygonCoordinates(selectedPolygon)
     : [];
 
-  // Use Google provider on Android if API key is available, default on iOS
-  const mapProvider =
-    Platform.OS === "android" && GOOGLE_MAPS_API_KEY
-      ? PROVIDER_GOOGLE
-      : undefined; // iOS uses Apple Maps by default, or Google if configured
+  // Use Google provider on Android - API key is configured in AndroidManifest.xml
+  // On iOS, it uses Apple Maps by default unless Google Maps SDK is configured
+  // Always use PROVIDER_GOOGLE on Android for Google Maps
+  const mapProvider = Platform.OS === "android" ? PROVIDER_GOOGLE : undefined;
+  
+  // Debug: Log provider info on mount
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      console.log("🗺️ Android Map Configuration:");
+      console.log("  - Provider:", mapProvider === PROVIDER_GOOGLE ? "PROVIDER_GOOGLE" : "undefined");
+      console.log("  - API Key in manifest: AIzaSyDz4Xap1p0E2w0nZ7u2sBEsDgrjGNycK04");
+      console.log("  - Selected Beach:", selectedBeach?.name || "None");
+    }
+  }, [selectedBeach]);
 
   return (
     <View style={styles.container}>
@@ -147,6 +155,31 @@ const Map = ({
         showsUserLocation={false}
         showsMyLocationButton={false}
         mapType="standard"
+        loadingEnabled={true}
+        loadingIndicatorColor={colors.primary}
+        loadingBackgroundColor={colors.background}
+        onMapReady={() => {
+          console.log("✅ Map is ready on", Platform.OS);
+          if (Platform.OS === "android") {
+            console.log("✅ Android Map initialized successfully");
+          }
+        }}
+        onError={(error) => {
+          console.error("❌ Map error:", error);
+          if (Platform.OS === "android") {
+            console.error("Android Map Error Details:", JSON.stringify(error, null, 2));
+            console.error("Check AndroidManifest.xml for com.google.android.geo.API_KEY");
+            console.error("Current API Key in manifest: AIzaSyDz4Xap1p0E2w0nZ7u2sBEsDgrjGNycK04");
+            console.error("Provider:", mapProvider === PROVIDER_GOOGLE ? "PROVIDER_GOOGLE" : "undefined");
+            console.error("Make sure:");
+            console.error("  1. API key has Android app restrictions enabled");
+            console.error("  2. Package name matches: com.kiwi.app");
+            console.error("  3. SHA-1 fingerprint is added to Google Cloud Console");
+          }
+        }}
+        onLoad={() => {
+          console.log("✅ Map loaded successfully on", Platform.OS);
+        }}
       >
         {/* Show polygon for selected beach */}
         {selectedBeach && polygonCoordinates.length > 0 && (
@@ -159,7 +192,7 @@ const Map = ({
         )}
 
         {/* Show marker for selected beach center */}
-        {selectedBeach && (
+        {/* {selectedBeach && (
           <Marker
             coordinate={{
               latitude: parseFloat(selectedBeach.latitude) || 0,
@@ -168,9 +201,9 @@ const Map = ({
             title={selectedBeach.name}
             pinColor={colors.primary}
           />
-        )}
+        )} */}
 
-        {/* Show user selected pin */}
+        {/* Show user selected pin - only appears after user selects a location */}
         {selectedPin && (
           <Marker
             coordinate={selectedPin}
@@ -206,11 +239,13 @@ const Map = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: "100%",
+    height: "100%",
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.background,
   },
   map: {
     width: "100%",

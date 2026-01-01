@@ -3,15 +3,15 @@
  * Reusable input component matching web app styling
  */
 
-import React from 'react';
+import React from "react";
 import {
   View,
   TextInput,
   Text,
   StyleSheet,
   TouchableOpacity,
-} from 'react-native';
-import { colors, fontSizes, spacing, borderRadius } from '../theme';
+} from "react-native";
+import { colors, fontSizes, spacing, borderRadius } from "../theme";
 
 const Input = ({
   label,
@@ -23,22 +23,26 @@ const Input = ({
   icon: Icon,
   rightIcon: RightIcon,
   onRightIconPress,
-  keyboardType = 'default',
-  autoCapitalize = 'none',
+  keyboardType = "default",
+  autoCapitalize = "none",
   style,
   containerStyle,
+  editable,
   ...props
 }) => {
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputContainer, error && styles.inputContainerError]}>
+      <View
+        style={[styles.inputContainer, error && styles.inputContainerError]}
+      >
         {Icon && (
           <View style={styles.iconContainer}>
             <Icon size={16} color={colors.mutedForeground} />
           </View>
         )}
         <TextInput
+          editable={editable}
           style={[
             styles.input,
             Icon && styles.inputWithIcon,
@@ -75,13 +79,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: fontSizes.bodySmall,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.foreground,
     marginBottom: spacing.xs,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.input,
     borderRadius: borderRadius.medium,
     borderWidth: 1,
@@ -94,7 +98,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     paddingLeft: spacing.md,
     paddingRight: spacing.sm,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   input: {
     flex: 1,
@@ -112,7 +116,7 @@ const styles = StyleSheet.create({
   rightIconContainer: {
     paddingRight: spacing.md,
     paddingLeft: spacing.sm,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   errorText: {
     fontSize: fontSizes.caption,
@@ -122,4 +126,3 @@ const styles = StyleSheet.create({
 });
 
 export default Input;
-

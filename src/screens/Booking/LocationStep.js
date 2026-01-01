@@ -12,6 +12,8 @@ import {
   ScrollView,
   Alert,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Search, Navigation, MapPin, AlertCircle } from "lucide-react-native";
@@ -41,6 +43,7 @@ const LocationStep = ({ beaches, isLoading }) => {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isInPolygon, setIsInPolygon] = useState(false);
+  const [hasUserSelectedLocation, setHasUserSelectedLocation] = useState(false); // Track if user manually selected location
 
   const activeBeaches = beaches.filter((b) => b.isActive);
 
@@ -60,21 +63,89 @@ const LocationStep = ({ beaches, isLoading }) => {
       setIsGettingLocation(true);
       setLocationError(null);
 
-      // For now, just select the first active beach
-      // In production, implement proper geolocation with expo-location
-      const nearestBeach = activeBeaches[0];
-      if (nearestBeach) {
-        dispatch(setBeachId(nearestBeach.id));
-        dispatch(
-          setLocation({
-            latitude: parseFloat(nearestBeach.latitude) || 0,
-            longitude: parseFloat(nearestBeach.longitude) || 0,
-          })
+      // Check if a beach is selected first
+      if (!bookingData.beachId) {
+        Alert.alert(
+          "No Beach Selected",
+          "Please select a beach first before getting your current location.",
+          [{ text: "OK" }]
+        );
+        setIsGettingLocation(false);
+        return;
+      }
+
+      // Get selected beach
+      const selectedBeach = beaches.find((b) => b.id === bookingData.beachId);
+      if (!selectedBeach) {
+        Alert.alert(
+          "Beach Not Found",
+          "Selected beach not found. Please select a beach again.",
+          [{ text: "OK" }]
+        );
+        setIsGettingLocation(false);
+        return;
+      }
+
+      // Import location permission utility
+      const { getCurrentLocation } = await import(
+        "../../utils/locationPermission"
+      );
+
+      // Get user's current location
+      const location = await getCurrentLocation();
+
+      if (!location) {
+        Alert.alert(
+          "Location Unavailable",
+          "Unable to get your location. Please enable location permissions in settings.",
+          [{ text: "OK" }]
+        );
+        setIsGettingLocation(false);
+        return;
+      }
+
+      // Check if location is within the selected beach's polygon
+      let isInPolygon = false;
+      if (
+        selectedBeach.polygonBoundary &&
+        Array.isArray(selectedBeach.polygonBoundary)
+      ) {
+        isInPolygon = isPointInPolygon(
+          location.latitude,
+          location.longitude,
+          selectedBeach.polygonBoundary
         );
       } else {
-        setLocationError("No beaches available");
+        // If beach has no polygon, allow any location
+        isInPolygon = true;
+      }
+
+      if (isInPolygon) {
+        // Location is within polygon - mark it on map (same as manual tap)
+        handleMapLocationSelect(
+          location.latitude,
+          location.longitude,
+          true,
+          selectedBeach.id
+        );
+      } else {
+        // Location is outside polygon - show popup
+        Alert.alert(
+          "Outside Service Area",
+          "You are outside the beach's service area. Please move to a location within the green polygon area or select a different beach.",
+          [{ text: "OK" }]
+        );
+        setLocationError(
+          "Your current location is outside the beach's service area."
+        );
       }
     } catch (error) {
+      console.error("Error getting current location:", error);
+      Alert.alert(
+        "Error",
+        error.message || "Failed to get your location. Please try again.",
+        [{ text: "OK" }]
+      );
       setLocationError(error.message || "Failed to get location");
     } finally {
       setIsGettingLocation(false);
@@ -83,22 +154,13 @@ const LocationStep = ({ beaches, isLoading }) => {
 
   const handleBeachSelect = (beach) => {
     dispatch(setBeachId(beach.id));
-    const lat = parseFloat(beach.latitude) || 0;
-    const lng = parseFloat(beach.longitude) || 0;
-
-    dispatch(setLocation({ latitude: lat, longitude: lng }));
+    // Don't set initial location - user must select a location manually
+    dispatch(setLocation({ latitude: 0, longitude: 0 }));
     setSelectedPlace(beach);
     setSearchQuery(beach.name);
     setLocationError(null);
-
-    // Check if beach center is within its own polygon (should always be true, but validate)
-    if (beach.polygonBoundary && Array.isArray(beach.polygonBoundary)) {
-      const inPolygon = isPointInPolygon(lat, lng, beach.polygonBoundary);
-      setIsInPolygon(inPolygon);
-    } else {
-      // If no polygon, allow selection (for beaches without boundaries)
-      setIsInPolygon(true);
-    }
+    setHasUserSelectedLocation(false); // Reset - user hasn't manually selected yet
+    setIsInPolygon(false); // No location selected yet
   };
 
   // Handle location selection from map
@@ -108,12 +170,25 @@ const LocationStep = ({ beaches, isLoading }) => {
         "Please select a location within the beach's service area (green polygon)."
       );
       setIsInPolygon(false);
+      setHasUserSelectedLocation(false);
       return;
     }
 
     dispatch(setLocation({ latitude: lat, longitude: lng }));
     setIsInPolygon(true);
     setLocationError(null);
+    setHasUserSelectedLocation(true); // User has manually selected a location
+  };
+
+  // Handle Undo button - reset beach selection and hide map
+  const handleUndo = () => {
+    dispatch(setBeachId(null));
+    dispatch(setLocation({ latitude: 0, longitude: 0 }));
+    setSelectedPlace(null);
+    setSearchQuery("");
+    setLocationError(null);
+    setIsInPolygon(false);
+    setHasUserSelectedLocation(false);
   };
 
   // Get selected beach data
@@ -121,11 +196,13 @@ const LocationStep = ({ beaches, isLoading }) => {
     beaches.find((b) => b.id === bookingData.beachId) || null;
 
   // Validate that location is within polygon if beach has polygon
+  // Only validate if user has manually selected a location
   useEffect(() => {
     if (
       selectedBeach &&
       bookingData.latitude !== 0 &&
-      bookingData.longitude !== 0
+      bookingData.longitude !== 0 &&
+      hasUserSelectedLocation
     ) {
       if (
         selectedBeach.polygonBoundary &&
@@ -149,20 +226,35 @@ const LocationStep = ({ beaches, isLoading }) => {
     } else {
       setIsInPolygon(false);
     }
-  }, [selectedBeach, bookingData.latitude, bookingData.longitude]);
+  }, [
+    selectedBeach,
+    bookingData.latitude,
+    bookingData.longitude,
+    hasUserSelectedLocation,
+  ]);
 
+  // Continue button is enabled only when:
+  // 1. Beach is selected
+  // 2. Location is set
+  // 3. Location is within polygon
+  // 4. User has manually selected a location (not just the initial pin)
   const canProceed =
     bookingData.beachId &&
     bookingData.latitude !== 0 &&
     bookingData.longitude !== 0 &&
-    isInPolygon;
+    isInPolygon &&
+    hasUserSelectedLocation;
 
   if (isLoading) {
     return <LocationStepSkeleton />;
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
       <View style={styles.contentWrapper}>
         <View style={styles.header}>
           <Text style={styles.title}>Select Your Beach</Text>
@@ -178,18 +270,24 @@ const LocationStep = ({ beaches, isLoading }) => {
             onChangeText={setSearchQuery}
             icon={Search}
             containerStyle={styles.searchInput}
+            editable={!selectedBeach}
           />
           <TouchableOpacity
             onPress={handleGetCurrentLocation}
-            disabled={isGettingLocation}
+            disabled={isGettingLocation || !bookingData.beachId}
             style={[
               styles.locationButton,
-              isGettingLocation && styles.locationButtonDisabled,
+              (isGettingLocation || !bookingData.beachId) &&
+                styles.locationButtonDisabled,
             ]}
           >
             <Navigation
               size={20}
-              color={isGettingLocation ? colors.textMuted : colors.primary}
+              color={
+                isGettingLocation || !bookingData.beachId
+                  ? colors.textLight
+                  : colors.primary
+              }
               style={isGettingLocation && { transform: [{ rotate: "360deg" }] }}
             />
           </TouchableOpacity>
@@ -233,6 +331,8 @@ const LocationStep = ({ beaches, isLoading }) => {
           style={styles.beachList}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.beachListContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           {filteredBeaches.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -299,21 +399,25 @@ const LocationStep = ({ beaches, isLoading }) => {
       </View>
 
       <View style={styles.buttonContainer}>
-        <Button
-          title="Undo"
-          onPress={() => dispatch(nextStep())}
-          disabled={!canProceed}
-          style={styles.cancelButton}
-          textStyle={styles.cancelText}
-        />
+        {bookingData.beachId && (
+          <Button
+            title="Reset"
+            onPress={handleUndo}
+            style={styles.cancelButton}
+            textStyle={styles.cancelText}
+          />
+        )}
         <Button
           title="Continue"
           onPress={() => dispatch(nextStep())}
           disabled={!canProceed}
-          style={styles.continueButton}
+          style={[
+            styles.continueButton,
+            { width: selectedBeach ? "70%" : "100%" },
+          ]}
         />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -332,7 +436,7 @@ function LocationStepSkeleton() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "space-between", // Push button to bottom
+    justifyContent: "space-between",
   },
   contentWrapper: {
     flex: 1,
@@ -360,13 +464,14 @@ const styles = StyleSheet.create({
   },
   locationButton: {
     width: 50,
-    height: 50,
+    height: 48,
     borderRadius: borderRadius.medium,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
+    bottom: 2,
   },
   locationButtonDisabled: {
     opacity: 0.5,
@@ -386,9 +491,11 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     height: 300,
+    width: "100%",
     marginBottom: spacing.md,
     borderRadius: borderRadius.medium,
     overflow: "hidden",
+    backgroundColor: colors.background,
     ...shadows.small,
   },
   mapHint: {
@@ -487,13 +594,16 @@ const styles = StyleSheet.create({
     ...shadows.lg,
   },
   continueButton: {
-    width: "70%",
+    width: "68%",
+    height: 50,
   },
   cancelButton: {
-    width: "25%",
+    width: "27%",
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: colors.primary,
+    paddingVertical: 0,
+    height: 50,
   },
   emptyContainer: {
     padding: spacing.xl,
