@@ -21,6 +21,7 @@ import ExtendBookingScreen from '../screens/Booking/ExtendBookingScreen';
 import BookingHistoryScreen from '../screens/BookingHistory/BookingHistoryScreen';
 import PreferencesScreen from '../screens/PreferencesScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import SeeAllBookingsScreen from '../screens/SeeAllBookings/SeeAllBookingsScreen';
 
 // Import auth screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -216,6 +217,13 @@ const AppNavigator = () => {
           component={EditProfileScreen}
           options={{
             headerShown: false, // EditProfile screen has its own header
+          }}
+        />
+        <Stack.Screen
+          name="SeeAllBookings"
+          component={SeeAllBookingsScreen}
+          options={{
+            headerShown: false, // SeeAllBookings screen has its own header
           }}
         />
       </Stack.Navigator>
