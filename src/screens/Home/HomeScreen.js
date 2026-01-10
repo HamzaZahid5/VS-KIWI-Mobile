@@ -33,7 +33,6 @@ import Button from "../../components/Button";
 import Badge from "../../components/Badge";
 import StatCard from "../../components/StatCard";
 import BookingCard from "../../components/BookingCard";
-import UpcomingBookingCard from "../../components/UpcomingBookingCard";
 import EmptyState from "../../components/EmptyState";
 import Skeleton from "../../components/Skeleton";
 import { get } from "../../utils/api";
@@ -52,39 +51,10 @@ const HomeScreen = ({ navigation }) => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const [activeOrdersData, setActiveOrdersData] = useState(null);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [userStatsData, setUserStatsData] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("active"); // 'active' or 'upcoming'
-
-  // Mock upcoming bookings (matching web app)
-  const [upcomingBookings] = useState([
-    {
-      id: "BK001",
-      location: "Sunny Beach, Miami",
-      date: "2024-01-15",
-      endDate: "2024-01-16",
-      beanbags: 2,
-      price: 89.99,
-      status: "upcoming",
-    },
-    {
-      id: "BK002",
-      location: "Coral Shores, California",
-      date: "2024-01-20",
-      endDate: "2024-01-22",
-      beanbags: 3,
-      price: 249.99,
-      status: "upcoming",
-    },
-    {
-      id: "BK003",
-      location: "Paradise Point, Hawaii",
-      date: "2024-02-01",
-      endDate: "2024-02-05",
-      beanbags: 4,
-      price: 399.99,
-      status: "upcoming",
-    },
-  ]);
 
   const fetchActiveOrders = async () => {
     if (!isAuthenticated || !user) {
@@ -111,13 +81,33 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  const fetchUserStats = async () => {
+    if (!isAuthenticated || !user) {
+      setStatsLoading(false);
+      return;
+    }
+
+    try {
+      setStatsLoading(true);
+      const response = await get(ordersEndpoints.stats);
+      console.log("User stats response:", response);
+      setUserStatsData(response);
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      setUserStatsData({ data: { totalSpent: 0, totalBeanbags: 0 } });
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchActiveOrders();
+    fetchUserStats();
   }, [isAuthenticated, user]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchActiveOrders();
+    await Promise.all([fetchActiveOrders(), fetchUserStats()]);
     setRefreshing(false);
   };
 
@@ -133,48 +123,56 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate("Booking");
   };
 
-  // Extract active orders from response
-  // API response structure: { statusCode: 200, data: [...orders...], message: "..." }
-  const activeOrders = React.useMemo(() => {
-    if (!activeOrdersData) return [];
-
-    // Check if data is directly an array
-    if (Array.isArray(activeOrdersData)) {
-      console.log(
-        "Active orders: response is array, count:",
-        activeOrdersData.length
-      );
-      return activeOrdersData;
+  // Extract orders array from response (matching web app logic)
+  const allOrders = React.useMemo(() => {
+    if (!activeOrdersData?.data || !Array.isArray(activeOrdersData.data)) {
+      return [];
     }
-
-    // Check if data is nested in response.data
-    if (Array.isArray(activeOrdersData?.data)) {
-      console.log(
-        "Active orders: found in response.data, count:",
-        activeOrdersData.data.length
-      );
-      return activeOrdersData.data;
-    }
-
-    // Check if data is nested in response.data.data (double nested)
-    if (Array.isArray(activeOrdersData?.data?.data)) {
-      console.log(
-        "Active orders: found in response.data.data, count:",
-        activeOrdersData.data.data.length
-      );
-      return activeOrdersData.data.data;
-    }
-
-    console.warn(
-      "Active orders: unexpected response structure",
-      activeOrdersData
-    );
-    return [];
+    return activeOrdersData.data;
   }, [activeOrdersData]);
-  const totalSpent = upcomingBookings.reduce(
-    (sum, booking) => sum + (booking.price || 0),
-    0
-  );
+
+  // Filter active bookings - orders with status "delivered" (matching web app)
+  const activeBookings = React.useMemo(() => {
+    if (!allOrders || !Array.isArray(allOrders)) {
+      return [];
+    }
+    return allOrders.filter((order) => {
+      return order.status === "delivered";
+    });
+  }, [allOrders]);
+
+  // Filter upcoming bookings (matching web app logic)
+  const upcomingBookings = React.useMemo(() => {
+    if (!allOrders || !Array.isArray(allOrders)) {
+      return [];
+    }
+
+    const now = new Date();
+
+    return allOrders.filter((order) => {
+      // Skip if already delivered
+      if (order.deliveredAt) {
+        return false;
+      }
+      
+      // For pre_book type with scheduledDate
+      if (order.bookingType === "pre_book" && order.scheduledDate) {
+        const scheduledDateTime = new Date(order.scheduledDate);
+        if (order.scheduledTime) {
+          const [hours, minutes] = order.scheduledTime.split(':').map(Number);
+          scheduledDateTime.setHours(hours, minutes, 0, 0);
+        }
+        return scheduledDateTime >= now;
+      }
+      
+      // For order_now type with scheduledDate
+      if (order.bookingType === "order_now" && order.scheduledDate) {
+        return new Date(order.scheduledDate) >= now;
+      }
+      
+      return false;
+    });
+  }, [allOrders]);
 
   // Show loading skeleton only on initial load
   if (ordersLoading && !activeOrdersData) {
@@ -212,7 +210,7 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.statCardWrapper}>
               <StatCard
                 title="Active Bookings"
-                value={activeOrders.length}
+                value={Array.isArray(activeBookings) ? activeBookings.length : 0}
                 icon={Clock}
                 iconBgColor={withOpacity(colors.primary, 0.1)}
                 iconColor={colors.primary}
@@ -221,7 +219,7 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.statCardWrapper}>
               <StatCard
                 title="Upcoming Bookings"
-                value={upcomingBookings.length}
+                value={Array.isArray(upcomingBookings) ? upcomingBookings.length : 0}
                 icon={Calendar}
                 iconBgColor={withOpacity("#3B82F6", 0.1)}
                 iconColor="#3B82F6"
@@ -230,7 +228,7 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.statCardWrapper}>
               <StatCard
                 title="Total Spent"
-                value={`$${totalSpent.toFixed(2)}`}
+                value={statsLoading ? "..." : `$${(userStatsData?.data?.totalSpent || 0).toFixed(2)}`}
                 icon={DollarSign}
                 iconBgColor={withOpacity("#10B981", 0.1)}
                 iconColor="#10B981"
@@ -239,7 +237,7 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.statCardWrapper}>
               <StatCard
                 title="Total Beanbags"
-                value={1}
+                value={statsLoading ? "..." : (userStatsData?.data?.totalBeanbags || 0).toString()}
                 icon={ShoppingBag}
                 iconBgColor={withOpacity("#F97316", 0.1)}
                 iconColor="#F97316"
@@ -277,7 +275,7 @@ const HomeScreen = ({ navigation }) => {
               >
                 Active
               </Text>
-              {activeOrders.length > 0 && (
+              {activeBookings.length > 0 && (
                 <View
                   style={[
                     styles.tabBadge,
@@ -290,7 +288,7 @@ const HomeScreen = ({ navigation }) => {
                       activeTab === "active" && styles.tabBadgeTextActive,
                     ]}
                   >
-                    {activeOrders.length}
+                    {activeBookings.length}
                   </Text>
                 </View>
               )}
@@ -351,9 +349,9 @@ const HomeScreen = ({ navigation }) => {
                     />
                   ))}
                 </View>
-              ) : activeOrders.length > 0 ? (
+              ) : Array.isArray(activeBookings) && activeBookings.length > 0 ? (
                 <FlatList
-                  data={activeOrders}
+                  data={activeBookings}
                   keyExtractor={(item) => item.id}
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.verticalScrollContent}
@@ -384,7 +382,7 @@ const HomeScreen = ({ navigation }) => {
           {/* Upcoming Bookings Content */}
           {activeTab === "upcoming" && (
             <View style={styles.tabContent}>
-              {upcomingBookings.length > 0 ? (
+              {Array.isArray(upcomingBookings) && upcomingBookings.length > 0 ? (
                 <FlatList
                   data={upcomingBookings}
                   keyExtractor={(item) => item.id}
@@ -393,9 +391,10 @@ const HomeScreen = ({ navigation }) => {
                   scrollEnabled={false}
                   nestedScrollEnabled={true}
                   renderItem={({ item: booking }) => (
-                    <UpcomingBookingCard
-                      booking={booking}
+                    <BookingCard
+                      order={booking}
                       onPress={() => handleBookingPress(booking.id)}
+                      onExtendPress={() => handleExtendPress(booking.id)}
                     />
                   )}
                 />

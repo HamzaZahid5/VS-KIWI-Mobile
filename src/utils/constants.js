@@ -87,6 +87,7 @@ export const ordersEndpoints = {
   list: "/orders",
   active: "/orders/active",
   myOrders: "/orders/my-orders",
+  stats: "/orders/stats",
   getById: (id) => `/orders/${id}`,
   create: "/orders",
   extend: (id) => `/orders/${id}/extend`,
