@@ -86,8 +86,12 @@ const ProfileScreen = () => {
   };
 
   const handleBookingHistory = () => {
-    // TODO: Navigate to booking history screen when implemented
-    Alert.alert('Booking History', 'Booking history functionality coming soon!');
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('BookingHistory');
+    } else {
+      navigation.navigate('BookingHistory');
+    }
   };
 
   const handlePaymentMethods = () => {

@@ -44,7 +44,7 @@ const { width } = Dimensions.get("window");
 const isTablet = width >= 768;
 
 const BookingDetailsScreen = ({ navigation, route }) => {
-  const { orderId } = route.params || {};
+  const { orderId, fromScreen } = route.params || {};
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -207,13 +207,19 @@ const BookingDetailsScreen = ({ navigation, route }) => {
           <AlertCircle size={48} color={colors.mutedForeground} />
           <Text style={styles.errorTitle}>Booking not found</Text>
           <Button
-            title="Go back home"
+            title={fromScreen === "BookingHistory" ? "Go back" : "Go back home"}
             onPress={() => {
-              const parent = navigation.getParent();
-              if (parent) {
-                parent.navigate("MainTabs", { screen: "HomeTab" });
+              // If coming from BookingHistory, go back to it
+              if (fromScreen === "BookingHistory") {
+                navigation.goBack();
               } else {
-                navigation.navigate("MainTabs", { screen: "HomeTab" });
+                // Otherwise, navigate to Home
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate("MainTabs", { screen: "HomeTab" });
+                } else {
+                  navigation.navigate("MainTabs", { screen: "HomeTab" });
+                }
               }
             }}
             style={styles.errorButton}
@@ -245,11 +251,17 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
-              const parent = navigation.getParent();
-              if (parent) {
-                parent.navigate("MainTabs", { screen: "HomeTab" });
+              // If coming from a specific screen, go back to that screen
+              if (fromScreen === "BookingHistory") {
+                navigation.goBack();
               } else {
-                navigation.navigate("MainTabs", { screen: "HomeTab" });
+                // Otherwise, navigate to Home
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate("MainTabs", { screen: "HomeTab" });
+                } else {
+                  navigation.navigate("MainTabs", { screen: "HomeTab" });
+                }
               }
             }}
             style={styles.backButton}
