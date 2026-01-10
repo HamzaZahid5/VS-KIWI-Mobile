@@ -75,8 +75,8 @@ const AdminLoginScreen = ({ navigation }) => {
         }));
 
         // Navigate to admin dashboard
-        // For now, navigate to home. In production, navigate to admin screen
-        navigation.replace('Home');
+        // For now, navigate to MainTabs. In production, navigate to admin screen
+        navigation.replace('MainTabs');
       }
     } catch (error) {
       Alert.alert('Login failed', error.message || 'Invalid email or password. Please try again.');

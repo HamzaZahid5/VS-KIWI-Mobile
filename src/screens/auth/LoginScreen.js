@@ -81,8 +81,8 @@ const LoginScreen = ({ navigation }) => {
           })
         );
 
-        // Navigate to home (new Home screen)
-        navigation.replace("Home");
+        // Navigate to MainTabs (bottom tab navigator)
+        navigation.replace("MainTabs");
       }
     } catch (error) {
       Alert.alert(

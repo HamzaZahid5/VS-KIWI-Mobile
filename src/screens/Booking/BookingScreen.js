@@ -267,19 +267,34 @@ const BookingScreen = ({ navigation, route }) => {
                       bookingData.paymentMethod === "stripe" &&
                       response?.data?.clientSecret
                     ) {
-                      navigation.navigate("Payment", {
-                        orderId: response.data.id,
-                        clientSecret: response.data.clientSecret,
-                      });
+                      // Use parent navigator to navigate to Payment (stack screen)
+                      const parent = navigation.getParent();
+                      if (parent) {
+                        parent.navigate("Payment", {
+                          orderId: response.data.id,
+                          clientSecret: response.data.clientSecret,
+                        });
+                      } else {
+                        navigation.navigate("Payment", {
+                          orderId: response.data.id,
+                          clientSecret: response.data.clientSecret,
+                        });
+                      }
                     } else {
-                      // For COD or if no clientSecret, navigate to Home
+                      // For COD or if no clientSecret, show success message and navigate to Home tab
                       Alert.alert(
                         "Booking Confirmed!",
                         `Your booking has been created successfully. Order ID: ${response.data.id}`,
                         [
                           {
                             text: "OK",
-                            onPress: () => navigation.navigate("Home"),
+                            onPress: () => {
+                              // Navigate to HomeTab via parent navigator
+                              const parent = navigation.getParent();
+                              if (parent) {
+                                parent.navigate('MainTabs', { screen: 'HomeTab' });
+                              }
+                            },
                           },
                         ]
                       );

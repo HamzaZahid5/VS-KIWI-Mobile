@@ -1,6 +1,6 @@
 /**
  * Main App Navigator
- * Configures React Navigation Stack Navigator for the app
+ * Configures React Navigation with Stack Navigator for auth and nested Bottom Tab Navigator for main app
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -10,12 +10,12 @@ import { useSelector } from 'react-redux';
 import { colors } from '../theme';
 import { selectIsAuthenticated } from '../redux/authSlice';
 
-// Import screens
-import HomeScreen from '../screens/Home/HomeScreen';
-import BookingScreen from '../screens/Booking/BookingScreen';
+// Import bottom tab navigator
+import BottomTabNavigator from './BottomTabNavigator';
+
+// Import detail screens (stack screens navigated from tabs)
 import BookingDetailsScreen from '../screens/BookingDetails/BookingDetailsScreen';
 import PaymentScreen from '../screens/Payment/PaymentScreen';
-import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 // Import auth screens
@@ -49,10 +49,10 @@ const AppNavigator = () => {
       hasCheckedInitialRoute.current = true;
       
       if (isAuthenticated) {
-        // User is authenticated, go to Home
+        // User is authenticated, go to MainTabs (bottom tab navigator)
         navigationRef.current.reset({
           index: 0,
-          routes: [{ name: 'Home' }],
+          routes: [{ name: 'MainTabs' }],
         });
       } else {
         // User is not authenticated, go to Login
@@ -66,17 +66,17 @@ const AppNavigator = () => {
     
     // After initial mount, handle auth state changes
     // If not authenticated and not on Login screen, navigate to Login
-    if (!isAuthenticated && currentRoute?.name !== 'Login') {
+    if (!isAuthenticated && currentRoute?.name !== 'Login' && !currentRoute?.name?.includes('Auth')) {
       navigationRef.current.reset({
         index: 0,
         routes: [{ name: 'Login' }],
       });
     }
-    // If authenticated and on Login screen, navigate to Home
+    // If authenticated and on Login screen, navigate to MainTabs
     else if (isAuthenticated && currentRoute?.name === 'Login') {
       navigationRef.current.reset({
         index: 0,
-        routes: [{ name: 'Home' }],
+        routes: [{ name: 'MainTabs' }],
       });
     }
   }, [isAuthenticated]);
@@ -90,10 +90,10 @@ const AppNavigator = () => {
           hasCheckedInitialRoute.current = true;
           
           if (isAuthenticated) {
-            // User is authenticated, go to Home
+            // User is authenticated, go to MainTabs (bottom tab navigator)
             navigationRef.current.reset({
               index: 0,
-              routes: [{ name: 'Home' }],
+              routes: [{ name: 'MainTabs' }],
             });
           }
           // If not authenticated, initialRouteName="Login" will handle it
@@ -143,21 +143,16 @@ const AppNavigator = () => {
           }}
         />
 
-        {/* Main App Screens */}
+        {/* Main App - Bottom Tab Navigator */}
         <Stack.Screen
-          name="Home"
-          component={HomeScreen}
+          name="MainTabs"
+          component={BottomTabNavigator}
           options={{
-            headerShown: false, // Home screen has its own header matching web app
+            headerShown: false,
           }}
         />
-        <Stack.Screen
-          name="Booking"
-          component={BookingScreen}
-          options={{
-            headerShown: false, // Booking screen has its own header
-          }}
-        />
+
+        {/* Detail Screens - Stack screens navigated from tabs */}
         <Stack.Screen
           name="BookingDetails"
           component={BookingDetailsScreen}
@@ -170,25 +165,6 @@ const AppNavigator = () => {
           component={PaymentScreen}
           options={{
             headerShown: false, // Payment screen has its own header
-          }}
-        />
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: colors.primary,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-            headerTintColor: colors.textWhite,
-            headerTitleStyle: {
-              fontWeight: '600',
-              fontSize: 18,
-            },
-            headerBackTitleVisible: false,
-            title: 'Profile',
           }}
         />
         <Stack.Screen

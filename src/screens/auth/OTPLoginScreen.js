@@ -3,7 +3,7 @@
  * OTP-based login screen matching web app exactly
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSizes } from '../../theme';
 import Button from '../../components/Button';
@@ -22,8 +23,12 @@ import OTPInput from '../../components/OTPInput';
 import { post } from '../../utils/api';
 import { OTP_ENDPOINTS } from '../../utils/constants';
 import { isValidEmail, isValidPhone } from '../../helpers/validationHelper';
+import { setAuth } from '../../redux/authSlice';
+import { storeAuthToken, storeData } from '../../utils/storage';
+import { STORAGE_KEYS } from '../../utils/constants';
 
-const OTPLoginScreen = ({ navigation }) => {
+const OTPLoginScreen = ({ navigation, route }) => {
+  const dispatch = useDispatch();
   const [step, setStep] = useState('input'); // 'input' or 'verify'
   const [channel, setChannel] = useState('email'); // 'email' or 'sms'
   const [email, setEmail] = useState('');
@@ -31,6 +36,24 @@ const OTPLoginScreen = ({ navigation }) => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Handle route params (from signup)
+  useEffect(() => {
+    if (route?.params?.email) {
+      const emailFromRoute = route.params.email;
+      setEmail(emailFromRoute);
+      setChannel('email');
+      
+      // If from signup, OTP was already sent, so go directly to verify step
+      if (route.params.fromSignup) {
+        setStep('verify');
+        Alert.alert(
+          'Verification code sent',
+          'Check your email for the OTP code.'
+        );
+      }
+    }
+  }, [route?.params]);
 
   const handleSendOtp = async () => {
     setError('');
@@ -56,18 +79,17 @@ const OTPLoginScreen = ({ navigation }) => {
     setLoading(true);
     try {
       await post(OTP_ENDPOINTS.send, {
-        email: channel === 'email' ? email : undefined,
-        phone: channel === 'sms' ? phone : undefined,
-        channel,
+        contact: channel === 'email' ? email : phone,
+        channel: channel,
       });
 
       setStep('verify');
       Alert.alert(
         'Verification code sent',
-        `Check your ${channel === 'email' ? 'inbox' : 'phone'} for the code.`
+        `Check your ${channel === 'email' ? 'email inbox' : 'phone'} for the code.`
       );
     } catch (error) {
-      Alert.alert('Failed to send code', error.message || 'Something went wrong');
+      Alert.alert('Failed to send code', error.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -82,19 +104,47 @@ const OTPLoginScreen = ({ navigation }) => {
     setLoading(true);
     try {
       const response = await post(OTP_ENDPOINTS.verify, {
-        email: channel === 'email' ? email : undefined,
-        phone: channel === 'sms' ? phone : undefined,
-        otp,
+        contact: channel === 'email' ? email : phone,
+        otp: otp,
+        channel: channel,
       });
 
-      if (response.token) {
-        // Store token and navigate
-        // This would typically update auth state
-        Alert.alert('Verified successfully', 'You are now logged in.');
-        navigation.replace('Home');
+      console.log('OTP verify response:', response);
+
+      // Handle response structure - API returns { data: { user, token }, ... }
+      const responseData = response?.data || response;
+      if (responseData?.token && responseData?.user) {
+        // Store auth data
+        await storeAuthToken(responseData.token);
+        await storeData(STORAGE_KEYS.USER_DATA, responseData.user);
+
+        // Update Redux store
+        dispatch(
+          setAuth({
+            token: responseData.token,
+            user: responseData.user,
+            refreshToken: responseData.refreshToken,
+          })
+        );
+
+        // Show success message
+        Alert.alert(
+          'Email verified successfully',
+          'Your email has been verified. You can now access your account.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                navigation.replace('MainTabs');
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert('Verification failed', 'Invalid response from server');
       }
     } catch (error) {
-      Alert.alert('Verification failed', error.message || 'Invalid verification code');
+      Alert.alert('Verification failed', error.message || 'Invalid or expired verification code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -104,9 +154,8 @@ const OTPLoginScreen = ({ navigation }) => {
     setLoading(true);
     try {
       await post(OTP_ENDPOINTS.send, {
-        email: channel === 'email' ? email : undefined,
-        phone: channel === 'sms' ? phone : undefined,
-        channel,
+        contact: channel === 'email' ? email : phone,
+        channel: channel,
       });
       Alert.alert('Code resent', 'A new verification code has been sent.');
     } catch (error) {
