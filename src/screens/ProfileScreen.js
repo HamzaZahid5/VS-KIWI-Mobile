@@ -81,8 +81,12 @@ const ProfileScreen = () => {
   };
 
   const handleEditProfile = () => {
-    // TODO: Navigate to edit profile screen when implemented
-    Alert.alert('Edit Profile', 'Edit profile functionality coming soon!');
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('EditProfile');
+    } else {
+      navigation.navigate('EditProfile');
+    }
   };
 
   const handleBookingHistory = () => {
@@ -100,12 +104,12 @@ const ProfileScreen = () => {
   };
 
   const handlePreferences = () => {
-    // Navigate to Settings screen (parent stack navigator)
+    // Navigate to Preferences screen (parent stack navigator)
     const parent = navigation.getParent();
     if (parent) {
-      parent.navigate('Settings');
+      parent.navigate('Preferences');
     } else {
-      navigation.navigate('Settings');
+      navigation.navigate('Preferences');
     }
   };
 

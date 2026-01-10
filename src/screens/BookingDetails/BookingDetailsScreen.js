@@ -14,6 +14,7 @@ import {
   Alert,
   Linking,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import {
   MapPin,
@@ -47,6 +48,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
   const { orderId, fromScreen } = route.params || {};
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [progress, setProgress] = useState(100);
 
@@ -101,20 +103,30 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     order?.durationHours,
   ]);
 
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isRefresh) {
+        setLoading(true);
+      }
       const response = await get(ordersEndpoints.getById(orderId));
       console.log("========>>>>>>>", response?.data);
 
       setOrder(response?.data || null);
     } catch (error) {
       console.error("Error fetching order details:", error);
-      Alert.alert("Error", "Failed to load booking details");
-      navigation.goBack();
+      if (!isRefresh) {
+        Alert.alert("Error", "Failed to load booking details");
+        navigation.goBack();
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOrderDetails(true);
   };
 
   const formatTime = (ms) => {
@@ -246,6 +258,9 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
