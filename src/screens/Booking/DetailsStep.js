@@ -37,7 +37,7 @@ import Badge from "../../components/Badge";
 import Skeleton from "../../components/Skeleton";
 import Checkbox from "../../components/Checkbox";
 
-const DetailsStep = ({ beachData, isLoading }) => {
+const DetailsStep = ({ beachData, isLoading, isExtendMode = false, orderItems = null }) => {
   const dispatch = useDispatch();
   const bookingData = useSelector(selectBookingData);
   const hourlyRate = useSelector(selectHourlyRate);
@@ -130,6 +130,16 @@ const DetailsStep = ({ beachData, isLoading }) => {
   };
 
   const calculateEstimatedTotal = () => {
+    // In extend mode, calculate based on order items
+    if (isExtendMode && orderItems) {
+      return orderItems.reduce((total, item) => {
+        const sizeInfo = sizes.find((s) => s.value === item.size);
+        const rate = hourlyRate * (sizeInfo?.priceMultiplier || 1);
+        return total + rate * durationHours * item.quantity;
+      }, 0);
+    }
+
+    // Normal mode: calculate based on selected sizes
     return selectedSizes.reduce((total, sq) => {
       const sizeInfo = sizes.find((s) => s.value === sq.size);
       const rate = hourlyRate * (sizeInfo?.priceMultiplier || 1);
@@ -139,8 +149,10 @@ const DetailsStep = ({ beachData, isLoading }) => {
 
   const estimatedTotal = calculateEstimatedTotal();
 
-  const canProceed =
-    selectedSizes.length > 0 && availableHours.length > 0 && durationHours > 0;
+  // In extend mode, only duration is required (no beanbag selection)
+  const canProceed = isExtendMode
+    ? availableHours.length > 0 && durationHours > 0
+    : selectedSizes.length > 0 && availableHours.length > 0 && durationHours > 0;
 
   if (isLoading) {
     return <DetailsStepSkeleton />;
@@ -149,11 +161,25 @@ const DetailsStep = ({ beachData, isLoading }) => {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>Booking Details</Text>
+        <Text style={styles.title}>
+          {isExtendMode ? "Extend Booking" : "Booking Details"}
+        </Text>
         <Text style={styles.subtitle}>
-          Choose your beanbag size, quantity, and duration
+          {isExtendMode
+            ? "Select how many additional hours you'd like to extend your booking"
+            : "Choose your beanbag size, quantity, and duration"}
         </Text>
       </View>
+
+      {/* Extend Mode Banner */}
+      {isExtendMode && (
+        <View style={[styles.infoBanner, { backgroundColor: `${colors.primary}15`, borderColor: `${colors.primary}33` }]}>
+          <AlertCircle size={16} color={colors.primary} />
+          <Text style={[styles.infoText, { color: colors.primary, fontWeight: '600' }]}>
+            You're extending the rental time for your existing beanbags
+          </Text>
+        </View>
+      )}
 
       {/* Booking Type Info */}
       {bookingType === "pre_book" && scheduledDate && scheduledTime ? (
@@ -189,147 +215,170 @@ const DetailsStep = ({ beachData, isLoading }) => {
         </View>
       )}
 
-      {/* Size Selection */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Size</Text>
-        {sizes.length === 0 ? (
-          <Card style={styles.emptyCard}>
-            <AlertCircle size={32} color={colors.textMuted} />
-            <Text style={styles.emptyText}>No beanbags available</Text>
-          </Card>
-        ) : (
-          <View style={styles.sizesGrid}>
-            {sizes.map((s) => {
-              const isSelected = isSizeSelected(s.value);
-              return (
-                <View key={s.value} style={styles.sizeContainer}>
-                  <Card
-                    style={[
-                      styles.sizeCard,
-                      isSelected && styles.sizeCardSelected,
-                    ]}
-                  >
-                    <View style={styles.sizeCardContent}>
-                      <TouchableOpacity
-                        onPress={() => dispatch(toggleSize(s.value))}
-                        activeOpacity={0.7}
-                        style={styles.sizeCardLeft}
-                      >
-                        <Checkbox
-                          checked={isSelected}
+      {/* Size Selection - Hidden in extend mode */}
+      {!isExtendMode && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Size</Text>
+          {sizes.length === 0 ? (
+            <Card style={styles.emptyCard}>
+              <AlertCircle size={32} color={colors.textMuted} />
+              <Text style={styles.emptyText}>No beanbags available</Text>
+            </Card>
+          ) : (
+            <View style={styles.sizesGrid}>
+              {sizes.map((s) => {
+                const isSelected = isSizeSelected(s.value);
+                return (
+                  <View key={s.value} style={styles.sizeContainer}>
+                    <Card
+                      style={[
+                        styles.sizeCard,
+                        isSelected && styles.sizeCardSelected,
+                      ]}
+                    >
+                      <View style={styles.sizeCardContent}>
+                        <TouchableOpacity
                           onPress={() => dispatch(toggleSize(s.value))}
-                        />
-                        <View
-                          style={[
-                            styles.sizeIndicator,
-                            s.value === "small" && styles.sizeIndicatorSmall,
-                            s.value === "medium" && styles.sizeIndicatorMedium,
-                            s.value === "large" && styles.sizeIndicatorLarge,
-                          ]}
+                          activeOpacity={0.7}
+                          style={styles.sizeCardLeft}
                         >
+                          <Checkbox
+                            checked={isSelected}
+                            onPress={() => dispatch(toggleSize(s.value))}
+                          />
                           <View
                             style={[
-                              styles.sizeDot,
-                              s.value === "small" && styles.sizeDotSmall,
-                              s.value === "medium" && styles.sizeDotMedium,
-                              s.value === "large" && styles.sizeDotLarge,
+                              styles.sizeIndicator,
+                              s.value === "small" && styles.sizeIndicatorSmall,
+                              s.value === "medium" && styles.sizeIndicatorMedium,
+                              s.value === "large" && styles.sizeIndicatorLarge,
                             ]}
-                          />
-                        </View>
-                        <View style={styles.sizeInfo}>
-                          <Text
-                            style={styles.sizeLabel}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
                           >
-                            {s.label}
-                          </Text>
-                          <Text
-                            style={styles.sizeAvailability}
-                            numberOfLines={1}
-                          >
-                            {s.availableQuantity} Available
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                      {isSelected && (
-                        <View style={styles.quantityControls}>
-                          <Text style={styles.quantityLabel}>Quantity</Text>
-                          <View style={styles.quantityRow}>
-                            <TouchableOpacity
-                              onPress={() =>
-                                dispatch(
-                                  setQuantity({
-                                    size: s.value,
-                                    quantity: Math.max(
-                                      1,
-                                      getSizeQuantity(s.value) - 1
-                                    ),
-                                  })
-                                )
-                              }
-                              disabled={getSizeQuantity(s.value) <= 1}
+                            <View
                               style={[
-                                styles.quantityButton,
-                                getSizeQuantity(s.value) <= 1 &&
-                                  styles.quantityButtonDisabled,
+                                styles.sizeDot,
+                                s.value === "small" && styles.sizeDotSmall,
+                                s.value === "medium" && styles.sizeDotMedium,
+                                s.value === "large" && styles.sizeDotLarge,
                               ]}
-                            >
-                              <Minus
-                                size={16}
-                                color={
-                                  getSizeQuantity(s.value) <= 1
-                                    ? colors.textMuted
-                                    : colors.primary
-                                }
-                              />
-                            </TouchableOpacity>
-                            <Text style={styles.quantityValue}>
-                              {getSizeQuantity(s.value)}
-                            </Text>
-                            <TouchableOpacity
-                              onPress={() =>
-                                dispatch(
-                                  setQuantity({
-                                    size: s.value,
-                                    quantity: Math.min(
-                                      s.availableQuantity,
-                                      getSizeQuantity(s.value) + 1
-                                    ),
-                                  })
-                                )
-                              }
-                              disabled={
-                                getSizeQuantity(s.value) >= s.availableQuantity
-                              }
-                              style={[
-                                styles.quantityButton,
-                                getSizeQuantity(s.value) >=
-                                  s.availableQuantity &&
-                                  styles.quantityButtonDisabled,
-                              ]}
-                            >
-                              <Plus
-                                size={16}
-                                color={
-                                  getSizeQuantity(s.value) >=
-                                  s.availableQuantity
-                                    ? colors.textMuted
-                                    : colors.primary
-                                }
-                              />
-                            </TouchableOpacity>
+                            />
                           </View>
-                        </View>
-                      )}
-                    </View>
-                  </Card>
+                          <View style={styles.sizeInfo}>
+                            <Text
+                              style={styles.sizeLabel}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                            >
+                              {s.label}
+                            </Text>
+                            <Text
+                              style={styles.sizeAvailability}
+                              numberOfLines={1}
+                            >
+                              {s.availableQuantity} Available
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                        {isSelected && (
+                          <View style={styles.quantityControls}>
+                            <Text style={styles.quantityLabel}>Quantity</Text>
+                            <View style={styles.quantityRow}>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  dispatch(
+                                    setQuantity({
+                                      size: s.value,
+                                      quantity: Math.max(
+                                        1,
+                                        getSizeQuantity(s.value) - 1
+                                      ),
+                                    })
+                                  )
+                                }
+                                disabled={getSizeQuantity(s.value) <= 1}
+                                style={[
+                                  styles.quantityButton,
+                                  getSizeQuantity(s.value) <= 1 &&
+                                    styles.quantityButtonDisabled,
+                                ]}
+                              >
+                                <Minus
+                                  size={16}
+                                  color={
+                                    getSizeQuantity(s.value) <= 1
+                                      ? colors.textMuted
+                                      : colors.primary
+                                  }
+                                />
+                              </TouchableOpacity>
+                              <Text style={styles.quantityValue}>
+                                {getSizeQuantity(s.value)}
+                              </Text>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  dispatch(
+                                    setQuantity({
+                                      size: s.value,
+                                      quantity: Math.min(
+                                        s.availableQuantity,
+                                        getSizeQuantity(s.value) + 1
+                                      ),
+                                    })
+                                  )
+                                }
+                                disabled={
+                                  getSizeQuantity(s.value) >= s.availableQuantity
+                                }
+                                style={[
+                                  styles.quantityButton,
+                                  getSizeQuantity(s.value) >=
+                                    s.availableQuantity &&
+                                    styles.quantityButtonDisabled,
+                                ]}
+                              >
+                                <Plus
+                                  size={16}
+                                  color={
+                                    getSizeQuantity(s.value) >=
+                                    s.availableQuantity
+                                      ? colors.textMuted
+                                      : colors.primary
+                                  }
+                                />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    </Card>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Order Items Display in Extend Mode */}
+      {isExtendMode && orderItems && orderItems.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Current Beanbags</Text>
+          <Card>
+            <View style={styles.orderItemsList}>
+              {orderItems.map((item, index) => (
+                <View key={index} style={styles.orderItem}>
+                  <View style={styles.orderItemInfo}>
+                    <Text style={styles.orderItemSize}>{item.size}</Text>
+                    <Text style={styles.orderItemQuantity}>
+                      Quantity: {item.quantity}
+                    </Text>
+                  </View>
                 </View>
-              );
-            })}
-          </View>
-        )}
-      </View>
+              ))}
+            </View>
+          </Card>
+        </View>
+      )}
 
       {/* Duration Selection */}
       <View style={styles.section}>
@@ -767,6 +816,30 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
     color: colors.textMuted,
     marginTop: spacing.sm,
+  },
+  orderItemsList: {
+    gap: spacing.sm,
+  },
+  orderItem: {
+    padding: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  orderItemInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  orderItemSize: {
+    fontSize: fontSizes.base,
+    fontWeight: "600",
+    color: colors.text,
+    textTransform: "capitalize",
+  },
+  orderItemQuantity: {
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    fontWeight: "500",
   },
   continueButton: {
     marginTop: spacing.md,

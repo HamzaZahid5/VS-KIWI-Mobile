@@ -69,6 +69,42 @@ const bookingFlowSlice = createSlice({
         bookingType: preSelectedType === 'pre_book' ? 'pre_book' : 'order_now',
       };
     },
+    initializeFromOrder: (state, action) => {
+      const order = action.payload;
+      if (!order) return;
+      
+      // Initialize booking data from order
+      state.bookingData.beachId = order.beachId || '';
+      state.bookingData.bookingType = order.bookingType || 'order_now';
+      state.bookingData.durationHours = 0; // Reset for extension (user selects additional hours)
+      
+      // Set selected sizes from order items
+      if (order.items && Array.isArray(order.items)) {
+        state.bookingData.selectedSizes = order.items.map(item => ({
+          size: item.size,
+          quantity: item.quantity || 1,
+        }));
+      }
+      
+      // Set scheduled date/time if present
+      if (order.scheduledDate) {
+        state.bookingData.scheduledDate = order.scheduledDate;
+      }
+      if (order.scheduledTime) {
+        state.bookingData.scheduledTime = order.scheduledTime;
+      }
+      
+      // Set location if present
+      if (order.deliveryLatitude) {
+        state.bookingData.latitude = parseFloat(order.deliveryLatitude);
+      }
+      if (order.deliveryLongitude) {
+        state.bookingData.longitude = parseFloat(order.deliveryLongitude);
+      }
+      
+      // For extend flow, start at 'details' step
+      state.step = 'details';
+    },
 
     // Location
     setBeachId: (state, action) => {
@@ -133,6 +169,7 @@ export const {
   prevStep,
   goToStep,
   reset,
+  initializeFromOrder,
   setBeachId,
   setLocation,
   setBookingType,

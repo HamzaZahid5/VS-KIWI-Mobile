@@ -64,19 +64,14 @@ const HomeScreen = ({ navigation }) => {
     try {
       setOrdersLoading(true);
       const response = await get(ordersEndpoints.active);
-      console.log("Active orders response:", JSON.stringify(response, null, 2));
+      console.log("Active orders response:", response);
       console.log("Active orders data:", response?.data);
       console.log(
         "Active orders count:",
-        Array.isArray(response?.data) ? response.data.length : Array.isArray(response) ? response.length : 0
+        Array.isArray(response?.data) ? response.data.length : 0
       );
 
-      // Normalize response structure - ensure we always store with data property
-      if (Array.isArray(response)) {
-        setActiveOrdersData({ data: response });
-      } else {
-        setActiveOrdersData(response);
-      }
+      setActiveOrdersData(response);
     } catch (error) {
       console.error("Error fetching active orders:", error);
       setActiveOrdersData({ data: [] });
@@ -125,93 +120,63 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleExtendPress = (orderId) => {
-    // Navigate to ExtendBooking (parent stack navigator)
-    const parent = navigation.getParent();
-    if (parent) {
-      parent.navigate("ExtendBooking", { orderId });
-    } else {
-      navigation.navigate("ExtendBooking", { orderId });
-    }
-  };
 
-  // Extract orders array from response (matching web app logic)
-  const allOrders = React.useMemo(() => {
-    // Handle different response structures
-    let ordersArray = null;
-    
-    if (Array.isArray(activeOrdersData)) {
-      // Response is directly an array
-      ordersArray = activeOrdersData;
-    } else if (Array.isArray(activeOrdersData?.data)) {
-      // Response has data property containing array
-      ordersArray = activeOrdersData.data;
-    }
-    
-    if (!ordersArray) {
-      console.log("All orders: Invalid data structure", activeOrdersData);
+  // Filter active bookings - matching web app logic exactly
+  const activeBookings = React.useMemo(() => {
+    if (!activeOrdersData?.data || !Array.isArray(activeOrdersData.data)) {
+      console.log("Active bookings: No data or not array", activeOrdersData);
       return [];
     }
-    
-    console.log("All orders extracted:", ordersArray.length, "orders");
-    return ordersArray;
+    const filtered = activeOrdersData.data.filter((order) => {
+      return order.status === "delivered";
+    });
+    console.log("Active bookings - Total orders:", activeOrdersData.data.length, "Filtered (delivered):", filtered.length);
+    if (activeOrdersData.data.length > 0) {
+      console.log("Order statuses:", activeOrdersData.data.map(o => ({ id: o.id?.slice(0, 8), status: o.status, deliveredAt: o.deliveredAt })));
+    }
+    return filtered;
   }, [activeOrdersData]);
 
-  // Filter active bookings - orders that are currently active/in progress
-  // This includes: "delivered" (with countdown), "new", and "assigned" status
-  const activeBookings = React.useMemo(() => {
-    if (!allOrders || !Array.isArray(allOrders)) {
-      console.log("Active bookings: No orders array");
-      return [];
-    }
-    const filtered = allOrders.filter((order) => {
-      // Show orders with status "delivered" (active countdown)
-      if (order.status === "delivered") {
-        return true;
-      }
-      // Show orders with status "new" or "assigned" (in progress, not yet delivered)
-      if (order.status === "new" || order.status === "assigned") {
-        return true;
-      }
-      return false;
-    });
-    console.log("Active bookings filtered:", filtered.length, "from", allOrders.length, "orders");
-    console.log("Active bookings details:", filtered.map(o => ({ id: o.id, status: o.status })));
-    return filtered;
-  }, [allOrders]);
-
-  // Filter upcoming bookings - pre-booked orders scheduled for future
+  // Filter upcoming bookings - matching web app logic exactly
   const upcomingBookings = React.useMemo(() => {
-    if (!allOrders || !Array.isArray(allOrders)) {
+    if (!activeOrdersData?.data || !Array.isArray(activeOrdersData.data)) {
+      console.log("Upcoming bookings: No data or not array");
       return [];
     }
 
     const now = new Date();
 
-    return allOrders.filter((order) => {
-      // Skip if already delivered or in active status
-      if (order.deliveredAt || order.status === "delivered" || order.status === "new" || order.status === "assigned") {
+    const filtered = activeOrdersData.data.filter((order) => {
+      if (order.deliveredAt) {
         return false;
       }
-
-      // For pre_book type with scheduledDate
       if (order.bookingType === "pre_book" && order.scheduledDate) {
         const scheduledDateTime = new Date(order.scheduledDate);
         if (order.scheduledTime) {
-          const [hours, minutes] = order.scheduledTime.split(":").map(Number);
+          const [hours, minutes] = order.scheduledTime.split(':').map(Number);
           scheduledDateTime.setHours(hours, minutes, 0, 0);
         }
+
         return scheduledDateTime >= now;
       }
-
-      // For order_now type with scheduledDate (if any)
       if (order.bookingType === "order_now" && order.scheduledDate) {
         return new Date(order.scheduledDate) >= now;
       }
-
       return false;
     });
-  }, [allOrders]);
+    console.log("Upcoming bookings - Total orders:", activeOrdersData.data.length, "Filtered:", filtered.length);
+    if (activeOrdersData.data.length > 0) {
+      console.log("Upcoming filter check:", activeOrdersData.data.map(o => ({
+        id: o.id?.slice(0, 8),
+        status: o.status,
+        deliveredAt: o.deliveredAt,
+        bookingType: o.bookingType,
+        scheduledDate: o.scheduledDate,
+        scheduledTime: o.scheduledTime
+      })));
+    }
+    return filtered;
+  }, [activeOrdersData]);
 
   // Show loading skeleton only on initial load
   if (ordersLoading && !activeOrdersData) {
@@ -406,7 +371,6 @@ const HomeScreen = ({ navigation }) => {
                     <BookingCard
                       order={order}
                       onPress={() => handleBookingPress(order.id)}
-                      onExtendPress={() => handleExtendPress(order.id)}
                     />
                   )}
                 />
@@ -446,7 +410,6 @@ const HomeScreen = ({ navigation }) => {
                     <BookingCard
                       order={booking}
                       onPress={() => handleBookingPress(booking.id)}
-                      onExtendPress={() => handleExtendPress(booking.id)}
                     />
                   )}
                 />

@@ -17,6 +17,7 @@ import BottomTabNavigator from './BottomTabNavigator';
 import BookingDetailsScreen from '../screens/BookingDetails/BookingDetailsScreen';
 import PaymentScreen from '../screens/Payment/PaymentScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import ExtendBookingScreen from '../screens/Booking/ExtendBookingScreen';
 
 // Import auth screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -184,6 +185,13 @@ const AppNavigator = () => {
             },
             headerBackTitleVisible: false,
             title: 'Settings',
+          }}
+        />
+        <Stack.Screen
+          name="ExtendBooking"
+          component={ExtendBookingScreen}
+          options={{
+            headerShown: false, // ExtendBooking screen has its own header
           }}
         />
       </Stack.Navigator>

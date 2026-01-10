@@ -33,6 +33,8 @@ const ConfirmStep = ({
   totalPrice,
   onConfirm,
   isLoading,
+  isExtendMode = false,
+  orderItems = null,
 }) => {
   const dispatch = useDispatch();
   const bookingData = useSelector(selectBookingData);
@@ -62,8 +64,14 @@ const ConfirmStep = ({
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>Confirm Booking</Text>
-        <Text style={styles.subtitle}>Review your booking details</Text>
+        <Text style={styles.title}>
+          {isExtendMode ? "Confirm Extension" : "Confirm Booking"}
+        </Text>
+        <Text style={styles.subtitle}>
+          {isExtendMode
+            ? "Review your extension details"
+            : "Review your booking details"}
+        </Text>
       </View>
 
       <Card style={styles.summaryCard}>
@@ -144,8 +152,28 @@ const ConfirmStep = ({
                 <Package size={16} color={colors.primary} />
               </View>
               <View style={styles.summaryText}>
-                <Text style={styles.summaryLabel}>Sizes & Quantities</Text>
-                {bookingData.selectedSizes.length > 0 ? (
+                <Text style={styles.summaryLabel}>
+                  {isExtendMode ? "Beanbags" : "Sizes & Quantities"}
+                </Text>
+                {isExtendMode && orderItems && orderItems.length > 0 ? (
+                  <View style={styles.sizesList}>
+                    {orderItems.map((item, index) => (
+                      <View key={index} style={styles.sizeItem}>
+                        <View
+                          style={[
+                            styles.sizeDot,
+                            item.size === "small" && styles.sizeDotSmall,
+                            item.size === "medium" && styles.sizeDotMedium,
+                            item.size === "large" && styles.sizeDotLarge,
+                          ]}
+                        />
+                        <Text style={styles.sizeText}>
+                          {item.size} × {item.quantity}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : bookingData.selectedSizes.length > 0 ? (
                   <View style={styles.sizesList}>
                     {bookingData.selectedSizes.map((sq) => (
                       <View key={sq.size} style={styles.sizeItem}>
@@ -175,7 +203,9 @@ const ConfirmStep = ({
             <View style={styles.summaryGrid}>
               <View style={styles.summaryGridItem}>
                 <Clock size={16} color={colors.textMuted} />
-                <Text style={styles.summaryGridLabel}>Duration</Text>
+                <Text style={styles.summaryGridLabel}>
+                  {isExtendMode ? "Additional Hours" : "Duration"}
+                </Text>
                 <Text style={styles.summaryGridValue}>
                   {bookingData.durationHours} hour
                   {bookingData.durationHours > 1 ? "s" : ""}
@@ -235,7 +265,11 @@ const ConfirmStep = ({
       </Card>
 
       <Button
-        title={`Confirm & Pay AED ${totalPrice.toFixed(2)}`}
+        title={
+          isExtendMode
+            ? `Extend Booking - AED ${totalPrice.toFixed(2)}`
+            : `Confirm & Pay AED ${totalPrice.toFixed(2)}`
+        }
         onPress={handleConfirm}
         disabled={!termsAccepted || isLoading}
         loading={isLoading}

@@ -208,7 +208,14 @@ const BookingDetailsScreen = ({ navigation, route }) => {
           <Text style={styles.errorTitle}>Booking not found</Text>
           <Button
             title="Go back home"
-            onPress={() => navigation.navigate("Home")}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate("MainTabs", { screen: "HomeTab" });
+              } else {
+                navigation.navigate("MainTabs", { screen: "HomeTab" });
+              }
+            }}
             style={styles.errorButton}
           />
         </View>
@@ -237,7 +244,14 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.navigate("Home")}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate("MainTabs", { screen: "HomeTab" });
+              } else {
+                navigation.navigate("MainTabs", { screen: "HomeTab" });
+              }
+            }}
             style={styles.backButton}
             activeOpacity={0.7}
           >

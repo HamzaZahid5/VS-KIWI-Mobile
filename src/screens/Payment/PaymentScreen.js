@@ -24,7 +24,12 @@ import { get } from "../../utils/api";
 import { ordersEndpoints } from "../../utils/constants";
 
 const PaymentScreen = ({ navigation, route }) => {
-  const { orderId, clientSecret: providedClientSecret } = route.params || {};
+  const {
+    orderId,
+    clientSecret: providedClientSecret,
+    isExtension = false,
+    extensionAmount = 0,
+  } = route.params || {};
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [amount, setAmount] = useState(0);
@@ -36,10 +41,14 @@ const PaymentScreen = ({ navigation, route }) => {
   }, [orderId]);
 
   useEffect(() => {
-    if (order?.totalPrice) {
+    if (isExtension && extensionAmount > 0) {
+      // For extension payments, use the extension amount
+      setAmount(extensionAmount);
+    } else if (order?.totalPrice) {
+      // For regular order payments, use the order total
       setAmount(parseFloat(order.totalPrice));
     }
-  }, [order]);
+  }, [order, isExtension, extensionAmount]);
 
   const fetchOrderDetails = async () => {
     try {
@@ -59,15 +68,33 @@ const PaymentScreen = ({ navigation, route }) => {
     // Invalidate order cache by refetching
     try {
       await fetchOrderDetails();
-      Alert.alert("Payment Successful!", "Your booking has been confirmed.", [
-        {
-          text: "OK",
-          onPress: () => navigation.navigate("BookingDetails", { orderId }),
-        },
-      ]);
+      Alert.alert(
+        isExtension ? "Extension Payment Successful!" : "Payment Successful!",
+        isExtension
+          ? "Your booking has been extended successfully."
+          : "Your booking has been confirmed.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate("BookingDetails", { orderId });
+              } else {
+                navigation.navigate("BookingDetails", { orderId });
+              }
+            },
+          },
+        ]
+      );
     } catch (error) {
       console.error("Error after payment success:", error);
-      navigation.navigate("BookingDetails", { orderId });
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.navigate("BookingDetails", { orderId });
+      } else {
+        navigation.navigate("BookingDetails", { orderId });
+      }
     }
   };
 
@@ -100,8 +127,8 @@ const PaymentScreen = ({ navigation, route }) => {
     );
   }
 
-  // Check if order is already paid
-  if (order.paymentStatus === "paid") {
+  // Check if order is already paid (skip this check for extension payments)
+  if (!isExtension && order.paymentStatus === "paid") {
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView
@@ -205,8 +232,10 @@ const PaymentScreen = ({ navigation, route }) => {
           <View style={styles.headerSpacer} />
         </View>
 
-        <Text style={styles.subtitle}>
-          Please complete your payment to confirm your booking.
+          <Text style={styles.subtitle}>
+          {isExtension
+            ? "Please complete your payment to extend your booking."
+            : "Please complete your payment to confirm your booking."}
         </Text>
 
         {/* Stripe Checkout Component */}
