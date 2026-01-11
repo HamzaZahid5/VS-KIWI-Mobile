@@ -17,6 +17,7 @@ import BottomTabNavigator from './BottomTabNavigator';
 import BookingDetailsScreen from '../screens/BookingDetails/BookingDetailsScreen';
 import PaymentScreen from '../screens/Payment/PaymentScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import BookingScreen from '../screens/Booking/BookingScreen';
 import ExtendBookingScreen from '../screens/Booking/ExtendBookingScreen';
 import BookingHistoryScreen from '../screens/BookingHistory/BookingHistoryScreen';
 import PreferencesScreen from '../screens/PreferencesScreen';
@@ -158,6 +159,13 @@ const AppNavigator = () => {
         />
 
         {/* Detail Screens - Stack screens navigated from tabs */}
+        <Stack.Screen
+          name="NewBooking"
+          component={BookingScreen}
+          options={{
+            headerShown: false, // BookingScreen has its own header
+          }}
+        />
         <Stack.Screen
           name="BookingDetails"
           component={BookingDetailsScreen}

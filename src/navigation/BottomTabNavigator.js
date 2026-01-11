@@ -5,13 +5,14 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { TouchableOpacity } from 'react-native';
 import { Home, Plus, User } from 'lucide-react-native';
 import { colors, fontSizes } from '../theme';
 
 // Import screens
 import HomeScreen from '../screens/Home/HomeScreen';
-import BookingScreen from '../screens/Booking/BookingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import NewBookingTabPlaceholder from './NewBookingTabPlaceholder';
 
 const Tab = createBottomTabNavigator();
 
@@ -52,13 +53,27 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="NewBookingTab"
-        component={BookingScreen}
-        options={{
+        component={NewBookingTabPlaceholder}
+        options={({ navigation: nav }) => ({
           tabBarLabel: 'New Booking',
           tabBarIcon: ({ color, size }) => (
             <Plus size={size} color={color} />
           ),
-        }}
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              {...props}
+              onPress={() => {
+                // Navigate to NewBooking stack screen (parent navigator)
+                const parent = nav.getParent();
+                if (parent) {
+                  parent.navigate('NewBooking');
+                } else {
+                  nav.navigate('NewBooking');
+                }
+              }}
+            />
+          ),
+        })}
       />
       <Tab.Screen
         name="ProfileTab"

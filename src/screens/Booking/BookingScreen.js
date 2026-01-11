@@ -292,7 +292,9 @@ const BookingScreen = ({ navigation, route }) => {
                               // Navigate to HomeTab via parent navigator
                               const parent = navigation.getParent();
                               if (parent) {
-                                parent.navigate('MainTabs', { screen: 'HomeTab' });
+                                parent.navigate("MainTabs", {
+                                  screen: "HomeTab",
+                                });
                               }
                             },
                           },
