@@ -6,7 +6,7 @@
 
 import React, { useEffect, useState } from "react";
 import { StatusBar, View } from "react-native";
-import { Provider } from "react-redux";
+import { Provider, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import * as SplashScreen from "expo-splash-screen";
 import { StripeProvider } from "@stripe/stripe-react-native";
@@ -17,6 +17,7 @@ import AppNavigator from "./src/navigation/AppNavigator";
 import { colors } from "./src/theme";
 import { STRIPE_PUBLIC_KEY } from "./src/utils/constants";
 import { initializeLocationPermission } from "./src/utils/locationPermission";
+import { selectIsAuthenticated } from "./src/redux/authSlice";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -35,8 +36,8 @@ export default function App() {
         // This runs silently - won't show popup if already granted
         await initializeLocationPermission();
 
-        // Wait exactly 3 seconds before hiding splash screen
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        // Wait exactly 2 seconds before hiding splash screen
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Hide the splash screen
         await SplashScreen.hideAsync();
@@ -87,10 +88,19 @@ export default function App() {
               translucent={false}
               backgroundColor={colors.primary}
             />
-            <AppNavigator />
+            <AppNavigatorWrapper />
           </StripeProvider>
         </PersistGate>
       </Provider>
     </View>
   );
 }
+
+/**
+ * Wrapper component that waits for Redux state to be available
+ * before rendering AppNavigator with correct initial route
+ */
+const AppNavigatorWrapper = () => {
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  return <AppNavigator initialAuthState={isAuthenticated} />;
+};

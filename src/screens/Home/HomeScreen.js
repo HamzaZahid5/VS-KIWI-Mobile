@@ -13,6 +13,7 @@ import {
   RefreshControl,
   FlatList,
   StatusBar,
+  Dimensions,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -38,6 +39,9 @@ import { get } from "../../utils/api";
 import { ordersEndpoints } from "../../utils/constants";
 import { withOpacity } from "../../utils/colorHelper";
 import { styles } from "./HomeScreen.styles";
+
+const { width } = Dimensions.get("window");
+const isTablet = width >= 768;
 
 // Note: ordersEndpoints is imported from constants, matching web app structure
 
@@ -434,21 +438,44 @@ const HomeScreen = ({ navigation }) => {
 const LoadingSkeleton = () => {
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle={"dark-content"} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        <Skeleton width="60%" height={32} style={styles.skeletonTitle} />
-        <Skeleton width="40%" height={16} style={styles.skeletonSubtitle} />
-        <View style={styles.skeletonStats}>
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton
-              key={i}
-              width="100%"
-              height={128}
-              style={styles.skeletonStatCard}
-            />
-          ))}
+        {/* Header Section Skeleton */}
+        <View style={styles.header}>
+          <Skeleton width="38%" height={isTablet ? 32 : 28} style={styles.skeletonHeaderTitle} />
+          <Skeleton width="50%" height={20} style={styles.skeletonHeaderSubtitle} />
+        </View>
+
+        {/* Stats Cards Section Skeleton */}
+        <View style={styles.statsSection}>
+          <View style={styles.statsGrid}>
+            {[1, 2, 3, 4].map((i) => (
+              <View key={i} style={styles.statCardWrapper}>
+                <Skeleton width="100%" height={100} style={styles.skeletonStatCard} />
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Bookings Section Skeleton */}
+        <View style={styles.section}>
+          {/* Section Title Skeleton */}
+          <View style={styles.sectionHeader}>
+            <Skeleton width="40%" height={isTablet ? 32 : 28} style={styles.skeletonSectionTitle} />
+          </View>
+
+          {/* Tab Switcher Skeleton */}
+          <View style={styles.tabSwitcherWrapper}>
+            <Skeleton width="100%" height={50} style={styles.skeletonTabSwitcher} />
+          </View>
+
+          {/* Booking Content Skeleton */}
+          <View style={styles.tabContent}>
+            <Skeleton width="100%" height={220} style={styles.skeletonCard} />
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

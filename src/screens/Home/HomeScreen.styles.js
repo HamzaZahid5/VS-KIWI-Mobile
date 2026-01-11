@@ -197,14 +197,24 @@ export const styles = StyleSheet.create({
   skeletonSubtitle: {
     marginBottom: spacing.xl,
   },
+  skeletonHeaderTitle: {
+    paddingLeft: 5,
+  },
+  skeletonHeaderSubtitle: {
+    flex: 1,
+    marginLeft: spacing.sm,
+  },
   skeletonStats: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.md,
   },
   skeletonStatCard: {
-    flex: isTablet ? "0 0 48%" : 1,
-    marginBottom: spacing.md,
+    borderRadius: borderRadius.large,
+  },
+  skeletonSectionTitle: {},
+  skeletonTabSwitcher: {
+    borderRadius: borderRadius.medium,
   },
 });
 

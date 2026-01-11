@@ -39,10 +39,13 @@ const Stack = createStackNavigator();
  * Wraps all screens in a Stack Navigator with consistent styling
  * Checks authentication state and navigates to Login if not authenticated
  */
-const AppNavigator = () => {
+const AppNavigator = ({ initialAuthState }) => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const navigationRef = useRef(null);
   const hasCheckedInitialRoute = useRef(false);
+  
+  // Use initialAuthState prop if available, otherwise use selector
+  const currentAuthState = initialAuthState !== undefined ? initialAuthState : isAuthenticated;
 
   // Handle initial route and auth state changes
   useEffect(() => {
@@ -54,7 +57,7 @@ const AppNavigator = () => {
     if (!hasCheckedInitialRoute.current) {
       hasCheckedInitialRoute.current = true;
       
-      if (isAuthenticated) {
+      if (currentAuthState) {
         // User is authenticated, go to MainTabs (bottom tab navigator)
         navigationRef.current.reset({
           index: 0,
@@ -85,7 +88,7 @@ const AppNavigator = () => {
         routes: [{ name: 'MainTabs' }],
       });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentAuthState]);
 
   return (
     <NavigationContainer 
@@ -107,7 +110,7 @@ const AppNavigator = () => {
       }}
     >
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName={currentAuthState ? "MainTabs" : "Login"}
         screenOptions={{
           headerShown: false, // Auth screens have custom headers
         }}
