@@ -12,12 +12,14 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from "react-native";
 import { useDispatch } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, fontSizes } from "../../theme";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
+import PhoneInput from "../../components/PhoneInput";
 import Card from "../../components/Card";
 import Divider from "../../components/Divider";
 import { post } from "../../utils/api";
@@ -210,7 +212,7 @@ const SignupScreen = ({ navigation }) => {
               icon={() => <Ionicons name="mail-outline" />}
             />
 
-            <Input
+            <PhoneInput
               label="Phone number"
               value={phone}
               onChangeText={(text) => {
@@ -218,9 +220,8 @@ const SignupScreen = ({ navigation }) => {
                 clearError("phone");
               }}
               placeholder="Enter your phone number"
-              keyboardType="phone-pad"
+              defaultCountry="AE"
               error={errors.phone}
-              icon={() => <Ionicons name="call-outline" />}
             />
 
             <Input
@@ -286,19 +287,21 @@ const SignupScreen = ({ navigation }) => {
                   />
                 }
               />
-              <Button
-                title="Apple"
-                variant="outline"
-                onPress={handleAppleSignup}
-                style={styles.socialButton}
-                icon={
-                  <Ionicons
-                    name="logo-apple"
-                    size={16}
-                    color={colors.foreground}
-                  />
-                }
-              />
+              {Platform.OS === "ios" && (
+                <Button
+                  title="Apple"
+                  variant="outline"
+                  onPress={handleAppleSignup}
+                  style={styles.socialButton}
+                  icon={
+                    <Ionicons
+                      name="logo-apple"
+                      size={16}
+                      color={colors.foreground}
+                    />
+                  }
+                />
+              )}
             </View>
 
             <View style={styles.loginLink}>

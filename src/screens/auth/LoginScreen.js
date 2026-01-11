@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  Platform,
 } from "react-native";
 import { useDispatch } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
@@ -202,19 +203,21 @@ const LoginScreen = ({ navigation }) => {
                   />
                 }
               />
-              <Button
-                title="Apple"
-                variant="outline"
-                onPress={handleAppleLogin}
-                style={styles.socialButton}
-                icon={
-                  <Ionicons
-                    name="logo-apple"
-                    size={16}
-                    color={colors.foreground}
-                  />
-                }
-              />
+              {Platform.OS === "ios" && (
+                <Button
+                  title="Apple"
+                  variant="outline"
+                  onPress={handleAppleLogin}
+                  style={styles.socialButton}
+                  icon={
+                    <Ionicons
+                      name="logo-apple"
+                      size={16}
+                      color={colors.foreground}
+                    />
+                  }
+                />
+              )}
             </View>
 
             <View style={styles.signupLink}>

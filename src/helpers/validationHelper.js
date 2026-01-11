@@ -3,6 +3,8 @@
  * Utility functions for form validation and data validation
  */
 
+import { isValidPhoneNumber } from 'libphonenumber-js';
+
 /**
  * Validate email address
  * @param {string} email - Email to validate
@@ -14,13 +16,19 @@ export const isValidEmail = (email) => {
 };
 
 /**
- * Validate phone number (basic validation)
- * @param {string} phone - Phone number to validate
+ * Validate phone number using libphonenumber-js (same as web app)
+ * @param {string} phone - Phone number to validate (should include country code, e.g., +971501234567)
  * @returns {boolean} True if phone is valid
  */
 export const isValidPhone = (phone) => {
-  const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-  return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
+  if (!phone || phone.trim() === '') {
+    return false;
+  }
+  try {
+    return isValidPhoneNumber(phone);
+  } catch (error) {
+    return false;
+  }
 };
 
 /**

@@ -15,6 +15,8 @@ import {
   Alert,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -32,8 +34,10 @@ import { AUTH_ENDPOINTS, OTP_ENDPOINTS } from "../utils/constants";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import Input from "../components/Input";
+import PhoneInput from "../components/PhoneInput";
 import Skeleton from "../components/Skeleton";
 import OTPInput from "../components/OTPInput";
+import { isValidPhone } from "../helpers/validationHelper";
 
 const EditProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -82,7 +86,7 @@ const EditProfileScreen = ({ navigation }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!firstName.trim() || firstName.trim().length < 2) {
       newErrors.firstName = "First name must be at least 2 characters";
     } else if (firstName.trim().length > 50) {
@@ -99,8 +103,8 @@ const EditProfileScreen = ({ navigation }) => {
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (phone && phone.trim() && !phone.startsWith("+")) {
-      newErrors.phone = "Phone number must include country code (e.g., +971)";
+    if (phone && phone.trim() && !isValidPhone(phone.trim())) {
+      newErrors.phone = "Please enter a valid phone number";
     }
 
     setErrors(newErrors);
@@ -137,7 +141,7 @@ const EditProfileScreen = ({ navigation }) => {
         contact: phone.trim(),
         channel: "sms",
       });
-      
+
       setVerificationStep("verify");
       Alert.alert(
         "Verification Code Sent",
@@ -145,10 +149,7 @@ const EditProfileScreen = ({ navigation }) => {
       );
     } catch (error) {
       console.error("Error sending OTP:", error);
-      Alert.alert(
-        "Failed to Send Code",
-        error?.message || "Please try again."
-      );
+      Alert.alert("Failed to Send Code", error?.message || "Please try again.");
     } finally {
       setSendingOtp(false);
     }
@@ -191,7 +192,7 @@ const EditProfileScreen = ({ navigation }) => {
         contact: phone.trim(),
         channel: "sms",
       });
-      
+
       setOtp("");
       Alert.alert(
         "Verification Code Resent",
@@ -286,6 +287,16 @@ const EditProfileScreen = ({ navigation }) => {
       navigation.goBack();
     }
   };
+  const renderLoading = () => {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.skeletonContainer}>
+          <Skeleton style={styles.skeleton} />
+          <Skeleton style={styles.skeleton} />
+        </View>
+      </SafeAreaView>
+    );
+  };
 
   const userToDisplay = user || currentUser;
   const hasChanges =
@@ -293,7 +304,7 @@ const EditProfileScreen = ({ navigation }) => {
     lastName.trim() !== (userToDisplay?.lastName || "") ||
     phone.trim() !== normalizePhoneNumber(userToDisplay?.phone || "");
 
-  if (loading) {
+  if (false) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.skeletonContainer}>
@@ -323,113 +334,124 @@ const EditProfileScreen = ({ navigation }) => {
         </View>
         <View style={styles.headerSpacer} />
       </View>
+      {loading ? (
+        renderLoading()
+      ) : (
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+          {/* Profile Form */}
+          <Card style={styles.formCard}>
+            <View style={styles.formSection}>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
+              <Text style={styles.sectionDescription}>
+                Update your profile details below
+              </Text>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile Form */}
-        <Card style={styles.formCard}>
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Personal Information</Text>
-            <Text style={styles.sectionDescription}>
-              Update your profile details below
-            </Text>
-
-            <View style={styles.formFields}>
-              {/* First Name */}
-              <Input
-                label="First name"
-                value={firstName}
-                onChangeText={(text) => {
-                  setFirstName(text);
-                  if (errors.firstName) {
-                    setErrors({ ...errors, firstName: null });
-                  }
-                }}
-                placeholder="Enter your first name"
-                icon={UserIcon}
-                error={errors.firstName}
-              />
-
-              {/* Last Name */}
-              <Input
-                label="Last name"
-                value={lastName}
-                onChangeText={(text) => {
-                  setLastName(text);
-                  if (errors.lastName) {
-                    setErrors({ ...errors, lastName: null });
-                  }
-                }}
-                placeholder="Enter your last name"
-                icon={UserIcon}
-                error={errors.lastName}
-              />
-
-              {/* Email (Disabled) */}
-              <Input
-                label="Email address"
-                value={email}
-                onChangeText={() => {}}
-                placeholder="Enter your email address"
-                icon={Mail}
-                editable={false}
-                error={errors.email}
-                containerStyle={styles.disabledInput}
-              />
-
-              {/* Phone Number */}
-              <View style={styles.phoneContainer}>
+              <View style={styles.formFields}>
+                {/* First Name */}
                 <Input
-                  label="Phone number"
-                  value={phone}
+                  label="First name"
+                  value={firstName}
                   onChangeText={(text) => {
-                    setPhone(text);
-                    if (errors.phone) {
-                      setErrors({ ...errors, phone: null });
+                    setFirstName(text);
+                    if (errors.firstName) {
+                      setErrors({ ...errors, firstName: null });
                     }
                   }}
-                  placeholder="Enter your phone number (e.g., +971501234567)"
-                  icon={Phone}
-                  keyboardType="phone-pad"
-                  error={errors.phone}
+                  placeholder="Enter your first name"
+                  icon={UserIcon}
+                  error={errors.firstName}
                 />
-                {phone.trim() &&
-                  !userToDisplay?.isPhoneVerified &&
-                  normalizePhoneNumber(userToDisplay?.phone || "") !==
-                    phone.trim() && (
-                    <Button
-                      title="Verify Number"
-                      variant="outline"
-                      onPress={handleOpenVerificationModal}
-                      style={styles.verifyButton}
-                    />
-                  )}
+
+                {/* Last Name */}
+                <Input
+                  label="Last name"
+                  value={lastName}
+                  onChangeText={(text) => {
+                    setLastName(text);
+                    if (errors.lastName) {
+                      setErrors({ ...errors, lastName: null });
+                    }
+                  }}
+                  placeholder="Enter your last name"
+                  icon={UserIcon}
+                  error={errors.lastName}
+                />
+
+                {/* Email (Disabled) */}
+                <Input
+                  label="Email address"
+                  value={email}
+                  onChangeText={() => {}}
+                  placeholder="Enter your email address"
+                  icon={Mail}
+                  editable={false}
+                  error={errors.email}
+                  containerStyle={styles.disabledInput}
+                />
+
+                {/* Phone Number */}
+                <View style={styles.phoneContainer}>
+                  <PhoneInput
+                    label="Phone number"
+                    value={phone}
+                    onChangeText={(text) => {
+                      setPhone(text);
+                      if (errors.phone) {
+                        setErrors({ ...errors, phone: null });
+                      }
+                    }}
+                    placeholder="Enter your phone number"
+                    defaultCountry="AE"
+                    error={errors.phone}
+                  />
+                  {phone.trim() &&
+                    !userToDisplay?.isPhoneVerified &&
+                    normalizePhoneNumber(userToDisplay?.phone || "") !==
+                      phone.trim() && (
+                      <Button
+                        title="Verify Number"
+                        variant="outline"
+                        onPress={handleOpenVerificationModal}
+                        style={styles.verifyButton}
+                      />
+                    )}
+                </View>
               </View>
             </View>
-          </View>
-        </Card>
+          </Card>
 
-        {/* Action Buttons */}
-        <View style={styles.actions}>
-          <Button
-            title="Cancel"
-            variant="outline"
-            onPress={handleCancel}
-            style={styles.cancelButton}
-          />
-          <Button
-            title={isSaving ? "Saving..." : "Save Changes"}
-            onPress={handleSave}
-            disabled={!hasChanges || isSaving}
-            loading={isSaving}
-            icon={!isSaving && <Save size={16} color={colors.primaryForeground} />}
-            style={styles.saveButton}
-          />
-        </View>
-      </ScrollView>
+          {/* Action Buttons */}
+          <View style={styles.actions}>
+            <Button
+              title="Cancel"
+              variant="outline"
+              onPress={handleCancel}
+              style={styles.cancelButton}
+            />
+            <Button
+              title={isSaving ? "Saving..." : "Save Changes"}
+              onPress={handleSave}
+              disabled={!hasChanges || isSaving}
+              loading={isSaving}
+              icon={
+                !isSaving && <Save size={16} color={colors.primaryForeground} />
+              }
+              style={styles.saveButton}
+            />
+          </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      )}
 
       {/* Phone Verification Modal */}
       <Modal
@@ -587,12 +609,15 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xxl + 100, // Extra padding for keyboard
   },
   formCard: {
     marginBottom: spacing.lg,
@@ -717,4 +742,3 @@ const styles = StyleSheet.create({
 });
 
 export default EditProfileScreen;
-

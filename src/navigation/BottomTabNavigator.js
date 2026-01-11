@@ -5,7 +5,7 @@
 
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { TouchableOpacity } from "react-native";
+import { Platform, TouchableOpacity } from "react-native";
 import { Home, Plus, User } from "lucide-react-native";
 import { colors, fontSizes } from "../theme";
 
@@ -34,7 +34,7 @@ const BottomTabNavigator = () => {
           paddingBottom: 8,
           paddingTop: 8,
           height: 65,
-          bottom: 10,
+          bottom: Platform.OS === "ios" && 10,
         },
         tabBarLabelStyle: {
           fontSize: fontSizes.xs,
