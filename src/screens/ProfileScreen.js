@@ -4,7 +4,7 @@
  * Reference: client/src/pages/User/profile.tsx
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,9 @@ import {
   SafeAreaView,
   Image,
   Alert,
-} from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+} from "react-native";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigation } from "@react-navigation/native";
 import {
   UserIcon,
   Mail,
@@ -30,15 +30,15 @@ import {
   ChevronRight,
   Settings,
   Edit,
-} from 'lucide-react-native';
-import { colors, fontSizes, spacing, borderRadius, shadows } from '../theme';
-import { selectUser } from '../redux/authSlice';
-import { logout } from '../redux/authSlice';
-import { removeAuthToken, removeData } from '../utils/storage';
-import { STORAGE_KEYS } from '../utils/constants';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import { withOpacity } from '../utils/colorHelper';
+} from "lucide-react-native";
+import { colors, fontSizes, spacing, borderRadius, shadows } from "../theme";
+import { selectUser } from "../redux/authSlice";
+import { logout } from "../redux/authSlice";
+import { removeAuthToken, removeData } from "../utils/storage";
+import { STORAGE_KEYS } from "../utils/constants";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import { withOpacity } from "../utils/colorHelper";
 
 const ProfileScreen = () => {
   const dispatch = useDispatch();
@@ -47,29 +47,29 @@ const ProfileScreen = () => {
 
   const handleLogout = () => {
     Alert.alert(
-      'Log Out',
-      'Are you sure you want to log out?',
+      "Log Out",
+      "Are you sure you want to log out?",
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Log Out',
-          style: 'destructive',
+          text: "Log Out",
+          style: "destructive",
           onPress: async () => {
             try {
               // Clear auth token and user data from storage
               await removeAuthToken();
               await removeData(STORAGE_KEYS.USER_DATA);
-              
+
               // Clear Redux state
               dispatch(logout());
-              
+
               // Navigate to login
               // Note: Navigation will be handled by AppNavigator's auth state listener
             } catch (error) {
-              console.error('Error during logout:', error);
+              console.error("Error during logout:", error);
               // Still dispatch logout even if storage clear fails
               dispatch(logout());
             }
@@ -83,60 +83,64 @@ const ProfileScreen = () => {
   const handleEditProfile = () => {
     const parent = navigation.getParent();
     if (parent) {
-      parent.navigate('EditProfile');
+      parent.navigate("EditProfile");
     } else {
-      navigation.navigate('EditProfile');
+      navigation.navigate("EditProfile");
     }
   };
 
   const handleBookingHistory = () => {
     const parent = navigation.getParent();
     if (parent) {
-      parent.navigate('BookingHistory');
+      parent.navigate("BookingHistory");
     } else {
-      navigation.navigate('BookingHistory');
+      navigation.navigate("BookingHistory");
     }
   };
 
   const handlePaymentMethods = () => {
     // TODO: Navigate to payment methods screen when implemented
-    Alert.alert('Payment Methods', 'Payment methods functionality coming soon!');
+    Alert.alert(
+      "Payment Methods",
+      "Payment methods functionality coming soon!"
+    );
   };
 
   const handlePreferences = () => {
     // Navigate to Preferences screen (parent stack navigator)
     const parent = navigation.getParent();
     if (parent) {
-      parent.navigate('Preferences');
+      parent.navigate("Preferences");
     } else {
-      navigation.navigate('Preferences');
+      navigation.navigate("Preferences");
     }
   };
 
   // Calculate user initials
-  const initials = user?.firstName && user?.lastName
-    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
-    : user?.email?.[0]?.toUpperCase() || 'U';
+  const initials =
+    user?.firstName && user?.lastName
+      ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+      : user?.email?.[0]?.toUpperCase() || "U";
 
   // Menu items matching web app
   const menuItems = [
-    { 
-      icon: History, 
-      label: 'Booking History', 
+    {
+      icon: History,
+      label: "Booking History",
       onPress: handleBookingHistory,
-      testId: 'menu-item-booking-history'
+      testId: "menu-item-booking-history",
     },
-    { 
-      icon: CreditCard, 
-      label: 'Payment Methods', 
+    {
+      icon: CreditCard,
+      label: "Payment Methods",
       onPress: handlePaymentMethods,
-      testId: 'menu-item-payment-methods'
+      testId: "menu-item-payment-methods",
     },
-    { 
-      icon: Settings, 
-      label: 'Preferences', 
+    {
+      icon: Settings,
+      label: "Preferences",
       onPress: handlePreferences,
-      testId: 'menu-item-preferences'
+      testId: "menu-item-preferences",
     },
   ];
 
@@ -147,11 +151,6 @@ const ProfileScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
-
         {/* Profile Card */}
         <Card style={styles.profileCard}>
           <View style={styles.profileContent}>
@@ -170,9 +169,9 @@ const ProfileScreen = () => {
             <Text style={styles.userName}>
               {user?.firstName && user?.lastName
                 ? `${user.firstName} ${user.lastName}`
-                : 'User'}
+                : "User"}
             </Text>
-            <Text style={styles.userEmail}>{user?.email || ''}</Text>
+            <Text style={styles.userEmail}>{user?.email || ""}</Text>
             <TouchableOpacity
               style={styles.editButton}
               onPress={handleEditProfile}
@@ -245,7 +244,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: fontSizes.h1,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.foreground,
   },
   profileCard: {
@@ -254,7 +253,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   profileContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   avatarContainer: {
     marginBottom: spacing.md,
@@ -264,8 +263,8 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     ...shadows.medium,
   },
   avatarImage: {
@@ -275,12 +274,12 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: fontSizes.h1,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.primaryForeground,
   },
   userName: {
     fontSize: fontSizes.h2,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.foreground,
     marginBottom: spacing.xs,
   },
@@ -290,8 +289,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.xs,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
@@ -302,31 +301,31 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: fontSizes.bodySmall,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.primary,
   },
   section: {
     marginBottom: spacing.lg,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
   sectionTitle: {
     fontSize: fontSizes.h3,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.foreground,
   },
   menuCard: {
     padding: 0,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
   },
@@ -335,8 +334,8 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
     flex: 1,
   },
@@ -349,7 +348,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   versionText: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: fontSizes.bodySmall,
     color: colors.mutedForeground,
     marginTop: spacing.md,

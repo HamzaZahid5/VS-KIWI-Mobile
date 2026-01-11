@@ -20,6 +20,7 @@ const Map = ({
 }) => {
   const mapRef = useRef(null);
   const [selectedPin, setSelectedPin] = useState(userLocation);
+  const [mapReady, setMapReady] = useState(false);
 
   // Get polygon for selected beach
   const selectedPolygon = selectedBeach?.polygonBoundary || null;
@@ -107,23 +108,31 @@ const Map = ({
     }
   }, [userLocation]);
 
-  // Fit map to show polygon when beach is selected
+  // Fit map to show polygon when beach is selected - with closer zoom
   useEffect(() => {
-    if (selectedBeach && selectedPolygon && mapRef.current) {
+    if (selectedBeach && selectedPolygon && mapRef.current && mapReady) {
       const coordinates = getPolygonCoordinates(selectedPolygon);
       if (coordinates.length > 0) {
-        mapRef.current.fitToCoordinates(coordinates, {
-          edgePadding: {
-            top: 50,
-            right: 50,
-            bottom: 50,
-            left: 50,
-          },
-          animated: true,
-        });
+        // Use smaller edgePadding for closer zoom
+        // Also add a small delay to ensure map is fully rendered
+        const timer = setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.fitToCoordinates(coordinates, {
+              edgePadding: {
+                top: 20,
+                right: 20,
+                bottom: 20,
+                left: 20,
+              },
+              animated: true,
+            });
+          }
+        }, 100);
+        
+        return () => clearTimeout(timer);
       }
     }
-  }, [selectedBeach, selectedPolygon]);
+  }, [selectedBeach, selectedPolygon, mapReady]);
 
   const polygonCoordinates = selectedPolygon
     ? getPolygonCoordinates(selectedPolygon)
@@ -139,7 +148,7 @@ const Map = ({
     if (Platform.OS === "android") {
       console.log("🗺️ Android Map Configuration:");
       console.log("  - Provider:", mapProvider === PROVIDER_GOOGLE ? "PROVIDER_GOOGLE" : "undefined");
-      console.log("  - API Key in manifest: AIzaSyDz4Xap1p0E2w0nZ7u2sBEsDgrjGNycK04");
+      console.log("  - API Key in manifest: AIzaSyAMUZ3olCqUk0-s1ldkorU4e5jRzndX4Q0");
       console.log("  - Selected Beach:", selectedBeach?.name || "None");
     }
   }, [selectedBeach]);
@@ -163,13 +172,14 @@ const Map = ({
           if (Platform.OS === "android") {
             console.log("✅ Android Map initialized successfully");
           }
+          setMapReady(true);
         }}
         onError={(error) => {
           console.error("❌ Map error:", error);
           if (Platform.OS === "android") {
             console.error("Android Map Error Details:", JSON.stringify(error, null, 2));
             console.error("Check AndroidManifest.xml for com.google.android.geo.API_KEY");
-            console.error("Current API Key in manifest: AIzaSyDz4Xap1p0E2w0nZ7u2sBEsDgrjGNycK04");
+            console.error("Current API Key in manifest: AIzaSyAMUZ3olCqUk0-s1ldkorU4e5jRzndX4Q0");
             console.error("Provider:", mapProvider === PROVIDER_GOOGLE ? "PROVIDER_GOOGLE" : "undefined");
             console.error("Make sure:");
             console.error("  1. API key has Android app restrictions enabled");
