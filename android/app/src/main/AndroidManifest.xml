@@ -15,7 +15,7 @@
     </intent>
   </queries>
   <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme">
-    <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyAMUZ3olCqUk0-s1ldkorU4e5jRzndX4Q0"/>
+    <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ"/>
     <meta-data android:name="com.google.android.gms.wallet.api.enabled" android:value="true"/>
     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
     <meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="49.0.0"/>

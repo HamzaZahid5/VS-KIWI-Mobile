@@ -17,7 +17,7 @@
       "bundleIdentifier": "com.kiwi.app",
       "icon": "./assets/iosIcon.png",
       "config": {
-        "googleMapsApiKey": "AIzaSyAMUZ3olCqUk0-s1ldkorU4e5jRzndX4Q0"
+        "googleMapsApiKey": "AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ"
       }
     },
     "android": {
@@ -27,7 +27,7 @@
         "backgroundColor": "#00711e"
       },
       "config": {
-        "googleMapsApiKey": "AIzaSyAMUZ3olCqUk0-s1ldkorU4e5jRzndX4Q0"
+        "googleMapsApiKey": "AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ"
       }
     },
     "web": {},

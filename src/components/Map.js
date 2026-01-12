@@ -148,7 +148,7 @@ const Map = ({
     if (Platform.OS === "android") {
       console.log("🗺️ Android Map Configuration:");
       console.log("  - Provider:", mapProvider === PROVIDER_GOOGLE ? "PROVIDER_GOOGLE" : "undefined");
-      console.log("  - API Key in manifest: AIzaSyAMUZ3olCqUk0-s1ldkorU4e5jRzndX4Q0");
+      console.log("  - API Key in manifest: AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ");
       console.log("  - Selected Beach:", selectedBeach?.name || "None");
     }
   }, [selectedBeach]);
@@ -179,7 +179,7 @@ const Map = ({
           if (Platform.OS === "android") {
             console.error("Android Map Error Details:", JSON.stringify(error, null, 2));
             console.error("Check AndroidManifest.xml for com.google.android.geo.API_KEY");
-            console.error("Current API Key in manifest: AIzaSyAMUZ3olCqUk0-s1ldkorU4e5jRzndX4Q0");
+            console.error("Current API Key in manifest: AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ");
             console.error("Provider:", mapProvider === PROVIDER_GOOGLE ? "PROVIDER_GOOGLE" : "undefined");
             console.error("Make sure:");
             console.error("  1. API key has Android app restrictions enabled");

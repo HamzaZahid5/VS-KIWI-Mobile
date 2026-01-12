@@ -64,7 +64,7 @@ export const OTP_ENDPOINTS = {
 // For Expo: Use EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
 // For production, use environment variable for security
 export const GOOGLE_MAPS_API_KEY =
-  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyAMUZ3olCqUk0-s1ldkorU4e5jRzndX4Q0";
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyBohwGynBZ06VnR1zWDoaxzVOy3_6Y4aiQ";
 
 // Stripe Public Key - Set via environment variable
 // For Expo: Use EXPO_PUBLIC_STRIPE_PUBLIC_KEY
